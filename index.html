@@ -362,6 +362,61 @@
                     </div>
                 </div>
 
+                <!-- Shift Constraints -->
+                <div class="form-section">
+                    <h3>Shift Constraints</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="maxContinuousDriving">Maximum Continuous Driving Time (minutes)</label>
+                            <input type="number" id="maxContinuousDriving" name="maxContinuousDriving" required min="0" value="300" step="15">
+                        </div>
+                        <div class="form-group">
+                            <label for="minShiftLength">Minimum Shift Length (minutes)</label>
+                            <input type="number" id="minShiftLength" name="minShiftLength" required min="0" value="480" step="15">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="maxShiftLength">Maximum Shift Length (minutes)</label>
+                            <input type="number" id="maxShiftLength" name="maxShiftLength" required min="0" value="720" step="15">
+                        </div>
+                        <div class="form-group">
+                            <label for="maxShiftWithOneBreak">Maximum Shift Length with One Break (minutes)</label>
+                            <input type="number" id="maxShiftWithOneBreak" name="maxShiftWithOneBreak" required min="0" value="720" step="15">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="minBreakLength">Minimum Break Length (minutes)</label>
+                            <input type="number" id="minBreakLength" name="minBreakLength" required min="0" value="30" step="15">
+                        </div>
+                        <div class="form-group">
+                            <label for="maxBreakLength">Maximum Break Length (minutes)</label>
+                            <input type="number" id="maxBreakLength" name="maxBreakLength" required min="0" value="30" step="15">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="maxBreakTimesteps">Maximum Number of Break Timesteps</label>
+                            <input type="number" id="maxBreakTimesteps" name="maxBreakTimesteps" required min="0" value="2" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="minActiveVehicles">Minimum Active Vehicles</label>
+                            <input type="number" id="minActiveVehicles" name="minActiveVehicles" required min="0" value="2" step="1">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="longShortBoundary">Long/Short Shift Boundary (minutes)</label>
+                            <input type="number" id="longShortBoundary" name="longShortBoundary" required min="0" value="510" step="15">
+                        </div>
+                        <div class="form-group">
+                            <label for="minShortShifts">Minimum Number of Short Shifts</label>
+                            <input type="number" id="minShortShifts" name="minShortShifts" required min="0" value="2" step="1">
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Ramp Configuration -->
                 <div class="form-section">
                     <h3>Ramp Profiles</h3>
@@ -548,16 +603,16 @@
                 },
                 "default_shift_optimizer_configuration": {
                     "constraints": {
-                        "max_continuous_driving_time": 20,
-                        "min_driving_net": 32,
-                        "max_driving_net": 48,
-                        "min_break_length": 2,
-                        "max_break_length": 2,
-                        "max_number_break_timesteps": 2,
-                        "max_driving_net_with_one_break": 48,
-                        "absolute_minimum_active_vehicles": 2,
-                        "long_short_boundary": 34,
-                        "min_num_short_shifts": Math.floor(parseInt(formData.get('nonWavCount')) * 0.7)
+                        "max_continuous_driving_time": Math.round(parseInt(formData.get('maxContinuousDriving')) / 15),
+                        "min_driving_net": Math.round(parseInt(formData.get('minShiftLength')) / 15),
+                        "max_driving_net": Math.round(parseInt(formData.get('maxShiftLength')) / 15),
+                        "min_break_length": Math.round(parseInt(formData.get('minBreakLength')) / 15),
+                        "max_break_length": Math.round(parseInt(formData.get('maxBreakLength')) / 15),
+                        "max_number_break_timesteps": parseInt(formData.get('maxBreakTimesteps')),
+                        "max_driving_net_with_one_break": Math.round(parseInt(formData.get('maxShiftWithOneBreak')) / 15),
+                        "absolute_minimum_active_vehicles": parseInt(formData.get('minActiveVehicles')),
+                        "long_short_boundary": Math.round(parseInt(formData.get('longShortBoundary')) / 15),
+                        "min_num_short_shifts": parseInt(formData.get('minShortShifts'))
                     },
                     "objective": {
                         "undersupply_penalty": 20,
