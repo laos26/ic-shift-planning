@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Transit Shift Plan Config Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .form-section {
+            margin-bottom: 35px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .form-section h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-section h3::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .weekend-override {
+            margin-left: 25px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e1e8ed;
+        }
+
+        .ramp-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .ramp-inputs input {
+            width: 80px;
+        }
+
+        .btn-container {
+            text-align: center;
+            margin-top: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .output-section {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+
+        .output-section h3 {
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+
+        #configOutput {
+            background: #2c3e50;
+            color: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .description {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .ramp-inputs {
+                flex-wrap: wrap;
+            }
+            
+            .container {
+                margin: 10px;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚌 Config Generator</h1>
+            <p>Create public transit shift planning configurations</p>
+        </div>
+
+        <div class="form-container">
+            <form id="configForm">
+                <!-- Basic Configuration -->
+                <div class="form-section">
+                    <h3>Basic Configuration</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cityId">City ID</label>
+                            <input type="number" id="cityId" name="cityId" required min="1" value="57">
+                            <div class="description">Unique identifier for the city</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="bookingType">Booking Type</label>
+                            <select id="bookingType" name="bookingType" required>
+                                <option value="hybrid">Hybrid</option>
+                                <option value="OD">On-Demand</option>
+                                <option value="PB">Point-to-Point</option>
+                            </select>
+                            <div class="description">Service booking model</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service Hours -->
+                <div class="form-section">
+                    <h3>Service Hours</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="serviceStart">Service Start Time</label>
+                            <input type="time" id="serviceStart" name="serviceStart" value="04:45" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="serviceEnd">Service End Time</label>
+                            <input type="time" id="serviceEnd" name="serviceEnd" value="23:30" required>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="enableWeekendOverride" name="enableWeekendOverride">
+                        <label for="enableWeekendOverride">Enable Weekend Service Hour Overrides</label>
+                    </div>
+
+                    <div id="weekendOverrides" class="weekend-override" style="display: none;">
+                        <h4>Weekend Hours</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="satStart">Saturday Start</label>
+                                <input type="time" id="satStart" name="satStart" value="05:15">
+                            </div>
+                            <div class="form-group">
+                                <label for="satEnd">Saturday End</label>
+                                <input type="time" id="satEnd" name="satEnd" value="22:00">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="sunStart">Sunday Start</label>
+                                <input type="time" id="sunStart" name="sunStart" value="05:15">
+                            </div>
+                            <div class="form-group">
+                                <label for="sunEnd">Sunday End</label>
+                                <input type="time" id="sunEnd" name="sunEnd" value="22:00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vehicle Configuration -->
+                <div class="form-section">
+                    <h3>Vehicle Fleet</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nonWavCount"># Non-WAV Vehicles</label>
+                            <input type="number" id="nonWavCount" name="nonWavCount" required min="0" value="11">
+                            <div class="description">Number of regular vehicles</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="wavCount"># WAV Vehicles</label>
+                            <input type="number" id="wavCount" name="wavCount" required min="0" value="3">
+                            <div class="description">Number of wheelchair accessible vehicles</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="nte">NTE (Net Time Equivalent)</label>
+                        <input type="number" id="nte" name="nte" step="0.1" value="1050">
+                        <div class="description">Target driven hours budget</div>
+                    </div>
+                </div>
+
+                <!-- Ramp Configuration -->
+                <div class="form-section">
+                    <h3>Ramp Profiles</h3>
+                    <div class="form-group">
+                        <label>Shift Ramp Configuration</label>
+                        <div class="ramp-inputs">
+                            <label>Up:</label>
+                            <input type="text" id="shiftRampUp" name="shiftRampUp" value="1" placeholder="e.g., 1,2,3">
+                            <label>Down:</label>
+                            <input type="text" id="shiftRampDown" name="shiftRampDown" value="1" placeholder="e.g., 3,2,1">
+                        </div>
+                        <div class="description">Comma-separated values for shift ramp profiles</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Break Ramp Configuration</label>
+                        <div class="ramp-inputs">
+                            <label>Up:</label>
+                            <input type="text" id="breakRampUp" name="breakRampUp" value="1" placeholder="e.g., 1,2,3">
+                            <label>Down:</label>
+                            <input type="text" id="breakRampDown" name="breakRampDown" value="1" placeholder="e.g., 3,2,1">
+                        </div>
+                        <div class="description">Comma-separated values for break ramp profiles</div>
+                    </div>
+                </div>
+
+                <div class="btn-container">
+                    <button type="submit" class="btn">Generate Config</button>
+                    <button type="button" class="btn btn-secondary" onclick="downloadConfig()">Download JSON</button>
+                </div>
+            </form>
+
+            <div id="outputSection" class="output-section" style="display: none;">
+                <h3>Generated Configuration</h3>
+                <div id="configOutput"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle weekend override section
+        document.getElementById('enableWeekendOverride').addEventListener('change', function() {
+            const weekendSection = document.getElementById('weekendOverrides');
+            weekendSection.style.display = this.checked ? 'block' : 'none';
+        });
+
+        let generatedConfig = null;
+
+        document.getElementById('configForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            generateConfig();
+        });
+
+        function parseRampValues(rampString) {
+            return rampString.split(',').map(val => parseInt(val.trim())).filter(val => !isNaN(val));
+        }
+
+        function generateConfig() {
+            const form = document.getElementById('configForm');
+            const formData = new FormData(form);
+            
+            // Parse ramp configurations
+            const shiftRampUp = parseRampValues(formData.get('shiftRampUp'));
+            const shiftRampDown = parseRampValues(formData.get('shiftRampDown'));
+            const breakRampUp = parseRampValues(formData.get('breakRampUp'));
+            const breakRampDown = parseRampValues(formData.get('breakRampDown'));
+
+            // Create service windows
+            const defaultServiceWindows = [{
+                start: formData.get('serviceStart') + ':00',
+                end: formData.get('serviceEnd') + ':00'
+            }];
+
+            let weekdayOverrides = {};
+            if (formData.get('enableWeekendOverride')) {
+                weekdayOverrides = {
+                    "Sat": {
+                        service_windows: [{
+                            start: formData.get('satStart') + ':00',
+                            end: formData.get('satEnd') + ':00'
+                        }]
+                    },
+                    "Sun": {
+                        service_windows: [{
+                            start: formData.get('sunStart') + ':00',
+                            end: formData.get('sunEnd') + ':00'
+                        }]
+                    }
+                };
+            }
+
+            // Generate the complete configuration
+            generatedConfig = {
+                "tag": `conf_city_${formData.get('cityId')}_${formData.get('bookingType')}_v1`,
+                "api_version": "3.0.0",
+                "city_params": {
+                    "city_id": parseInt(formData.get('cityId')),
+                    "city_code": "gen",
+                    "city_name": `Generated City ${formData.get('cityId')}`,
+                    "country_code": "US",
+                    "service_type": formData.get('bookingType').toLowerCase(),
+                    "contract_type": "taas",
+                    "snowflake_region": "useast1-1",
+                    "timezone": "America/New_York",
+                    "timestep_width": 900,
+                    "demand_service_hours_spec": {
+                        "default_service_hours": {
+                            "service_windows": defaultServiceWindows
+                        },
+                        "weekday_override_service_hours": weekdayOverrides
+                    },
+                    "supply_service_hours_spec": {
+                        "default_service_hours": {
+                            "service_windows": defaultServiceWindows
+                        },
+                        "weekday_override_service_hours": weekdayOverrides
+                    },
+                    "default_ramp_config": {
+                        "timestep_width": 900,
+                        "ramp_profiles": {
+                            "shift, up": shiftRampUp,
+                            "shift, down": shiftRampDown,
+                            "break, up": breakRampUp,
+                            "break, down": breakRampDown
+                        }
+                    },
+                    "demand_source": "pb_classic",
+                    "pb_demand_profiles_spec": {
+                        "target_date_booked_weight": 1
+                    },
+                    "supply_source": "via.dbt_fleet.fleet_shifts_latest",
+                    "location_column": "LOCATION",
+                    "display_settings": {
+                        "allow_optimize_for_qos_target": true,
+                        "allow_custom_reference_period": true,
+                        "internal_shift_id_format": "eu_taas",
+                        "add_supply_group_as_service_tag": true,
+                        "add_vehicle_group_as_service_tag": true,
+                        "show_date_and_time_pickers_for_planning_period": true
+                    },
+                    "supply_and_demand_configuration": {
+                        "demand_groups": [{
+                            "demand_attributes": {
+                                "demand_group_name": "main",
+                                "supply_group_name": "main"
+                            }
+                        }],
+                        "supply_groups": [{
+                            "supply_attributes": {
+                                "supply_group_name": "main",
+                                "possible_vehicle_group_names": ["nonwav", "wav"]
+                            }
+                        }],
+                        "vehicle_groups": [
+                            {
+                                "vehicle_group_size": parseInt(formData.get('nonWavCount')),
+                                "default_vehicle_attributes": {
+                                    "vehicle_group_name": "nonwav"
+                                },
+                                "shift_optimizer_override_constraints": {
+                                    "absolute_minimum_active_vehicles": 1,
+                                    "handover_timesteps": 2
+                                }
+                            },
+                            {
+                                "vehicle_group_size": parseInt(formData.get('wavCount')),
+                                "default_vehicle_attributes": {
+                                    "vehicle_group_name": "wav"
+                                },
+                                "shift_optimizer_override_constraints": {
+                                    "absolute_minimum_active_vehicles": 1,
+                                    "handover_timesteps": 2
+                                }
+                            }
+                        ],
+                        "budget_spec": {
+                            "budget_by_supply_group": {
+                                "main": {
+                                    "driven_hours": parseFloat(formData.get('nte')),
+                                    "supply_buffer": []
+                                }
+                            }
+                        }
+                    }
+                },
+                "default_shift_optimizer_configuration": {
+                    "constraints": {
+                        "max_continuous_driving_time": 20,
+                        "min_driving_net": 32,
+                        "max_driving_net": 48,
+                        "min_break_length": 2,
+                        "max_break_length": 2,
+                        "max_number_break_timesteps": 2,
+                        "max_driving_net_with_one_break": 48,
+                        "absolute_minimum_active_vehicles": 2,
+                        "long_short_boundary": 34,
+                        "min_num_short_shifts": Math.floor(parseInt(formData.get('nonWavCount')) * 0.7)
+                    },
+                    "objective": {
+                        "undersupply_penalty": 20,
+                        "very_undersupply_threshold": 0.5,
+                        "rel_tolerance": 0.05,
+                        "lp_timeout": 10000
+                    },
+                    "combinator_whitelist": {
+                        "shifts": [
+                            {
+                                "subshifts": [{"length": 12}, {"length": 18}],
+                                "breaks": [{"length": 8}],
+                                "handover": 2
+                            },
+                            {
+                                "subshifts": [{"length": 18}, {"length": 12}],
+                                "breaks": [{"length": 8}],
+                                "handover": 2
+                            },
+                            {
+                                "subshifts": [{"length": 15}, {"length": 15}],
+                                "breaks": [{"length": 12}],
+                                "handover": 2
+                            }
+                        ]
+                    }
+                }
+            };
+
+            // Display the generated config
+            document.getElementById('configOutput').textContent = JSON.stringify(generatedConfig, null, 2);
+            document.getElementById('outputSection').style.display = 'block';
+            
+            // Scroll to output
+            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function downloadConfig() {
+            if (!generatedConfig) {
+                alert('Please generate a configuration first!');
+                return;
+            }
+
+            const dataStr = JSON.stringify(generatedConfig, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `transit_config_${generatedConfig.city_params.city_id}_${Date.now()}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
