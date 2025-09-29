@@ -227,7 +227,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚌 IC Shift Planning Config Generator</h1>
+            <h1>IC Shift Planning Config Generator</h1>
             <p>Create IC shift planning configs and supply vectors</p>
         </div>
 
@@ -236,18 +236,70 @@
                 <!-- Basic Configuration -->
                 <div class="form-section">
                     <h3>Basic Configuration</h3>
+                    <div class="form-group">
+                        <label for="configTag">Configuration Tag</label>
+                        <input type="text" id="configTag" name="configTag" required value="conf_city_custom_v1">
+                        <div class="description">Unique identifier for this configuration version</div>
+                    </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="cityId">City ID</label>
                             <input type="number" id="cityId" name="cityId" required min="1" value="57">
+                            <div class="description">Unique numeric identifier</div>
                         </div>
                         <div class="form-group">
-                            <label for="bookingType">Booking Type</label>
-                            <select id="bookingType" name="bookingType" required>
-                                <option value="hybrid">Hybrid</option>
-                                <option value="OD">On-Demand</option>
-                            </select>
+                            <label for="cityCode">City Code</label>
+                            <input type="text" id="cityCode" name="cityCode" required value="gen" maxlength="10">
+                            <div class="description">Short code (e.g., ftw, nyc)</div>
                         </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cityName">City Name</label>
+                            <input type="text" id="cityName" name="cityName" required value="Generated Transit Service">
+                            <div class="description">Full display name for the service</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="timezone">Timezone</label>
+                            <select id="timezone" name="timezone" required>
+                                <optgroup label="American Timezones">
+                                    <option value="America/New_York">Eastern Time (New York)</option>
+                                    <option value="America/Chicago" selected>Central Time (Chicago)</option>
+                                    <option value="America/Denver">Mountain Time (Denver)</option>
+                                    <option value="America/Los_Angeles">Pacific Time (Los Angeles)</option>
+                                    <option value="America/Phoenix">Mountain Time (Phoenix - No DST)</option>
+                                    <option value="America/Anchorage">Alaska Time</option>
+                                    <option value="America/Honolulu">Hawaii Time</option>
+                                    <option value="America/Toronto">Eastern Time (Toronto)</option>
+                                    <option value="America/Vancouver">Pacific Time (Vancouver)</option>
+                                    <option value="America/Mexico_City">Central Time (Mexico City)</option>
+                                </optgroup>
+                                <optgroup label="European Timezones">
+                                    <option value="Europe/London">GMT/BST (London)</option>
+                                    <option value="Europe/Paris">CET/CEST (Paris)</option>
+                                    <option value="Europe/Berlin">CET/CEST (Berlin)</option>
+                                    <option value="Europe/Rome">CET/CEST (Rome)</option>
+                                    <option value="Europe/Madrid">CET/CEST (Madrid)</option>
+                                    <option value="Europe/Amsterdam">CET/CEST (Amsterdam)</option>
+                                    <option value="Europe/Brussels">CET/CEST (Brussels)</option>
+                                    <option value="Europe/Vienna">CET/CEST (Vienna)</option>
+                                    <option value="Europe/Stockholm">CET/CEST (Stockholm)</option>
+                                    <option value="Europe/Helsinki">EET/EEST (Helsinki)</option>
+                                    <option value="Europe/Athens">EET/EEST (Athens)</option>
+                                    <option value="Europe/Dublin">GMT/IST (Dublin)</option>
+                                </optgroup>
+                            </select>
+                            <div class="description">Local timezone for operations</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="bookingType">Booking Type</label>
+                        <select id="bookingType" name="bookingType" required>
+                            <option value="hybrid">Hybrid</option>
+                            <option value="on-demand">On-Demand</option>
+                            <option value="prebooking">Prebooking</option>
+                        </select>
+                        <div class="description">Service booking model</div>
                     </div>
                 </div>
 
@@ -406,17 +458,17 @@
 
             // Generate the complete configuration
             generatedConfig = {
-                "tag": `conf_city_${formData.get('cityId')}_${formData.get('bookingType')}_v1`,
+                "tag": formData.get('configTag'),
                 "api_version": "3.0.0",
                 "city_params": {
                     "city_id": parseInt(formData.get('cityId')),
-                    "city_code": "gen",
-                    "city_name": `Generated City ${formData.get('cityId')}`,
+                    "city_code": formData.get('cityCode'),
+                    "city_name": formData.get('cityName'),
                     "country_code": "US",
                     "service_type": formData.get('bookingType').toLowerCase(),
                     "contract_type": "taas",
                     "snowflake_region": "useast1-1",
-                    "timezone": "America/New_York",
+                    "timezone": formData.get('timezone'),
                     "timestep_width": 900,
                     "demand_service_hours_spec": {
                         "default_service_hours": {
