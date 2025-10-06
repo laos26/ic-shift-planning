@@ -562,6 +562,7 @@
                 sunEnd: formData.get('sunEnd'),
                 timezone: formData.get('timezone')
             };
+            console.log('Storing config data for supply generator:', configDataForSupply);
             localStorage.setItem('transitConfigData', JSON.stringify(configDataForSupply));
             
             // Parse ramp configurations

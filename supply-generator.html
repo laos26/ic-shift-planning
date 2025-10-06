@@ -401,36 +401,60 @@
         function updateConfigInfo() {
             if (!configData) return;
             
-            let weekendStatusText = 'No';
-            if (configData.hasWeekendOverride) {
+            let serviceHoursDisplay = '';
+            
+            // Always show weekday hours
+            serviceHoursDisplay = `<strong>Weekday Hours:</strong> ${configData.serviceStart} - ${configData.serviceEnd}<br>`;
+            
+            // Show weekend service details
+            if (configData.hasWeekendOverride && configData.weekendServiceType) {
                 switch(configData.weekendServiceType) {
-                    case 'full': weekendStatusText = 'Yes (Both days)'; break;
-                    case 'saturday-only': weekendStatusText = 'Saturday only'; break;
-                    case 'sunday-only': weekendStatusText = 'Sunday only'; break;
-                    case 'none': weekendStatusText = 'No weekend service'; break;
-                    default: weekendStatusText = 'Yes'; break;
+                    case 'full':
+                        serviceHoursDisplay += `<strong>Saturday Hours:</strong> ${configData.satStart} - ${configData.satEnd}<br>`;
+                        serviceHoursDisplay += `<strong>Sunday Hours:</strong> ${configData.sunStart} - ${configData.sunEnd}<br>`;
+                        break;
+                    case 'saturday-only':
+                        serviceHoursDisplay += `<strong>Saturday Hours:</strong> ${configData.satStart} - ${configData.satEnd}<br>`;
+                        serviceHoursDisplay += `<strong>Sunday Hours:</strong> No service<br>`;
+                        break;
+                    case 'sunday-only':
+                        serviceHoursDisplay += `<strong>Saturday Hours:</strong> No service<br>`;
+                        serviceHoursDisplay += `<strong>Sunday Hours:</strong> ${configData.sunStart} - ${configData.sunEnd}<br>`;
+                        break;
+                    case 'none':
+                        serviceHoursDisplay += `<strong>Saturday Hours:</strong> No service<br>`;
+                        serviceHoursDisplay += `<strong>Sunday Hours:</strong> No service<br>`;
+                        break;
                 }
+            } else {
+                serviceHoursDisplay += `<strong>Saturday Hours:</strong> Same as weekday<br>`;
+                serviceHoursDisplay += `<strong>Sunday Hours:</strong> Same as weekday<br>`;
             }
             
             const info = document.getElementById('configInfo');
             info.innerHTML = `
                 <strong>City:</strong> ${configData.cityName}<br>
-                <strong>Service Hours:</strong> ${configData.serviceStart} - ${configData.serviceEnd}<br>
-                <strong>Weekend Service:</strong> ${weekendStatusText}<br>
+                ${serviceHoursDisplay}
                 <strong>Timezone:</strong> ${configData.timezone}
             `;
 
             // Show/hide weekend charts based on weekend service type
             const weekendContainer = document.getElementById('weekendChartsContainer');
-            console.log('Config data:', configData);
+            console.log('Config data loaded:', configData);
             console.log('Weekend service type:', configData.weekendServiceType);
             
-            if (configData.hasWeekendOverride && configData.weekendServiceType && configData.weekendServiceType !== 'none') {
+            const shouldShowWeekendCharts = configData.hasWeekendOverride && 
+                configData.weekendServiceType && 
+                configData.weekendServiceType !== 'none';
+                
+            console.log('Should show weekend charts:', shouldShowWeekendCharts);
+            
+            if (shouldShowWeekendCharts) {
                 weekendContainer.style.display = 'block';
-                console.log('Showing weekend charts');
+                console.log('Showing weekend charts container');
             } else {
                 weekendContainer.style.display = 'none';
-                console.log('Hiding weekend charts');
+                console.log('Hiding weekend charts container');
             }
         }
 
@@ -582,8 +606,12 @@
 
             // Weekend charts (only if weekend overrides exist and service is available)
             if (configData && configData.hasWeekendOverride && configData.weekendServiceType && configData.weekendServiceType !== 'none') {
-                // Saturday chart (only if Saturday service is enabled)
+                
+                // Show Saturday chart container if Saturday service is enabled
+                const saturdayChartContainer = document.getElementById('saturdayChart').parentElement;
                 if (configData.weekendServiceType === 'full' || configData.weekendServiceType === 'saturday-only') {
+                    saturdayChartContainer.style.display = 'block';
+                    
                     const saturdayData = generateConstrainedHourlyPattern(serviceType, 6, configData);
                     currentSaturdaySupplyData = saturdayData.map(val => val * scalingFactor);
 
@@ -607,10 +635,17 @@
                             }
                         );
                     }
+                } else {
+                    // Hide Saturday chart if no Saturday service
+                    saturdayChartContainer.style.display = 'none';
+                    currentSaturdaySupplyData = Array(24).fill(0); // All zeros for no service
                 }
 
-                // Sunday chart (only if Sunday service is enabled)
+                // Show Sunday chart container if Sunday service is enabled
+                const sundayChartContainer = document.getElementById('sundayChart').parentElement;
                 if (configData.weekendServiceType === 'full' || configData.weekendServiceType === 'sunday-only') {
+                    sundayChartContainer.style.display = 'block';
+                    
                     const sundayData = generateConstrainedHourlyPattern(serviceType, 0, configData);
                     currentSundaySupplyData = sundayData.map(val => val * scalingFactor);
 
@@ -634,7 +669,21 @@
                             }
                         );
                     }
+                } else {
+                    // Hide Sunday chart if no Sunday service
+                    sundayChartContainer.style.display = 'none';
+                    currentSundaySupplyData = Array(24).fill(0); // All zeros for no service
                 }
+            } else {
+                // No weekend override or no weekend service - hide all weekend charts and set to zeros
+                if (document.getElementById('saturdayChart')) {
+                    document.getElementById('saturdayChart').parentElement.style.display = 'none';
+                }
+                if (document.getElementById('sundayChart')) {
+                    document.getElementById('sundayChart').parentElement.style.display = 'none';
+                }
+                currentSaturdaySupplyData = Array(24).fill(0);
+                currentSundaySupplyData = Array(24).fill(0);
             }
         }
 
@@ -680,16 +729,30 @@
                 let hourlyPattern;
                 
                 // Use the appropriate pattern based on day and user adjustments
-                if (dayOfWeek === 6 && configData.hasWeekendOverride) {
-                    // Saturday - use Saturday chart data if available
-                    hourlyPattern = currentSaturdaySupplyData.length > 0 ? 
-                        currentSaturdaySupplyData : 
-                        generateConstrainedHourlyPattern(serviceType, dayOfWeek, configData).map(val => val * scalingFactor);
-                } else if (dayOfWeek === 0 && configData.hasWeekendOverride) {
-                    // Sunday - use Sunday chart data if available
-                    hourlyPattern = currentSundaySupplyData.length > 0 ? 
-                        currentSundaySupplyData : 
-                        generateConstrainedHourlyPattern(serviceType, dayOfWeek, configData).map(val => val * scalingFactor);
+                if (dayOfWeek === 6) {
+                    // Saturday
+                    if (configData.hasWeekendOverride && 
+                        (configData.weekendServiceType === 'full' || configData.weekendServiceType === 'saturday-only')) {
+                        // Saturday has service - use chart data if available
+                        hourlyPattern = currentSaturdaySupplyData.length > 0 ? 
+                            currentSaturdaySupplyData : 
+                            generateConstrainedHourlyPattern(serviceType, dayOfWeek, configData).map(val => val * scalingFactor);
+                    } else {
+                        // No Saturday service
+                        hourlyPattern = Array(24).fill(0);
+                    }
+                } else if (dayOfWeek === 0) {
+                    // Sunday
+                    if (configData.hasWeekendOverride && 
+                        (configData.weekendServiceType === 'full' || configData.weekendServiceType === 'sunday-only')) {
+                        // Sunday has service - use chart data if available
+                        hourlyPattern = currentSundaySupplyData.length > 0 ? 
+                            currentSundaySupplyData : 
+                            generateConstrainedHourlyPattern(serviceType, dayOfWeek, configData).map(val => val * scalingFactor);
+                    } else {
+                        // No Sunday service
+                        hourlyPattern = Array(24).fill(0);
+                    }
                 } else {
                     // Weekday (Mon-Fri) - use weekday chart data
                     hourlyPattern = currentWeekdaySupplyData.length > 0 ? 
