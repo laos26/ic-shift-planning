@@ -919,8 +919,23 @@
                 
                 // Convert each hour to 4 fifteen-minute bins with granular service hour checking
                 for (let hour = 0; hour < 24; hour++) {
-                    const hourlyValue = hourlyPattern[hour];
-                    const baseBinValue = hourlyValue / 4; // Base value for 15-minute bins
+                    // Always use base pattern for supply vector generation to ensure proper granular checking
+                    const basePattern = standardShapes[serviceType][dayOfWeek === 0 || dayOfWeek === 6 ? 'weekend' : 'weekday'];
+                    let baseHourlyValue = basePattern[hour] * scalingFactor;
+                    
+                    // If user has manually edited this day's pattern, use their values instead
+                    if (dayOfWeek >= 1 && dayOfWeek <= 5 && currentWeekdaySupplyData.length > 0) {
+                        // Weekday - use edited weekday data
+                        baseHourlyValue = currentWeekdaySupplyData[hour];
+                    } else if (dayOfWeek === 6 && currentSaturdaySupplyData.length > 0) {
+                        // Saturday - use edited Saturday data  
+                        baseHourlyValue = currentSaturdaySupplyData[hour];
+                    } else if (dayOfWeek === 0 && currentSundaySupplyData.length > 0) {
+                        // Sunday - use edited Sunday data
+                        baseHourlyValue = currentSundaySupplyData[hour];
+                    }
+                    
+                    const baseBinValue = baseHourlyValue / 4; // Base value for 15-minute bins
                     
                     // Check each of the 4 fifteen-minute bins for this hour
                     for (let binIndex = 0; binIndex < 4; binIndex++) {
