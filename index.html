@@ -320,13 +320,8 @@
                         </div>
                     </div>
 
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="enableWeekendOverride" name="enableWeekendOverride">
-                        <label for="enableWeekendOverride">Configure Weekend Service</label>
-                    </div>
-
-                    <div id="weekendOverrides" class="weekend-override" style="display: none;">
-                        <h4>Weekend Service Options</h4>
+                    <div id="weekendOverrides" class="weekend-override">
+                        <h4>Weekend Service Configuration</h4>
                         
                         <div class="form-group">
                             <label>Weekend Service Type</label>
@@ -466,12 +461,6 @@
     </div>
 
     <script>
-        // Toggle weekend override section
-        document.getElementById('enableWeekendOverride').addEventListener('change', function() {
-            const weekendSection = document.getElementById('weekendOverrides');
-            weekendSection.style.display = this.checked ? 'block' : 'none';
-        });
-
         // Handle weekend service type changes
         function updateWeekendHoursVisibility() {
             const weekendServiceType = document.querySelector('input[name="weekendServiceType"]:checked').value;
@@ -531,8 +520,8 @@
                 cityName: formData.get('cityName'),
                 serviceStart: formData.get('serviceStart'),
                 serviceEnd: formData.get('serviceEnd'),
-                hasWeekendOverride: formData.get('enableWeekendOverride') ? true : false,
-                weekendServiceType: formData.get('enableWeekendOverride') ? formData.get('weekendServiceType') : 'none',
+                hasWeekendOverride: true, // Always true now
+                weekendServiceType: formData.get('weekendServiceType') || 'full',
                 satStart: formData.get('satStart'),
                 satEnd: formData.get('satEnd'),
                 sunStart: formData.get('sunStart'),
@@ -555,58 +544,56 @@
             }];
 
             let weekdayOverrides = {};
-            if (formData.get('enableWeekendOverride')) {
-                const weekendServiceType = formData.get('weekendServiceType');
-                
-                if (weekendServiceType === 'full') {
-                    weekdayOverrides = {
-                        "Sat": {
-                            service_windows: [{
-                                start: formData.get('satStart') + ':00',
-                                end: formData.get('satEnd') + ':00'
-                            }]
-                        },
-                        "Sun": {
-                            service_windows: [{
-                                start: formData.get('sunStart') + ':00',
-                                end: formData.get('sunEnd') + ':00'
-                            }]
-                        }
-                    };
-                } else if (weekendServiceType === 'saturday-only') {
-                    weekdayOverrides = {
-                        "Sat": {
-                            service_windows: [{
-                                start: formData.get('satStart') + ':00',
-                                end: formData.get('satEnd') + ':00'
-                            }]
-                        },
-                        "Sun": {
-                            service_windows: [] // No service on Sunday
-                        }
-                    };
-                } else if (weekendServiceType === 'sunday-only') {
-                    weekdayOverrides = {
-                        "Sat": {
-                            service_windows: [] // No service on Saturday
-                        },
-                        "Sun": {
-                            service_windows: [{
-                                start: formData.get('sunStart') + ':00',
-                                end: formData.get('sunEnd') + ':00'
-                            }]
-                        }
-                    };
-                } else if (weekendServiceType === 'none') {
-                    weekdayOverrides = {
-                        "Sat": {
-                            service_windows: [] // No service on Saturday
-                        },
-                        "Sun": {
-                            service_windows: [] // No service on Sunday
-                        }
-                    };
-                }
+            const weekendServiceType = formData.get('weekendServiceType') || 'full';
+            
+            if (weekendServiceType === 'full') {
+                weekdayOverrides = {
+                    "Sat": {
+                        service_windows: [{
+                            start: formData.get('satStart') + ':00',
+                            end: formData.get('satEnd') + ':00'
+                        }]
+                    },
+                    "Sun": {
+                        service_windows: [{
+                            start: formData.get('sunStart') + ':00',
+                            end: formData.get('sunEnd') + ':00'
+                        }]
+                    }
+                };
+            } else if (weekendServiceType === 'saturday-only') {
+                weekdayOverrides = {
+                    "Sat": {
+                        service_windows: [{
+                            start: formData.get('satStart') + ':00',
+                            end: formData.get('satEnd') + ':00'
+                        }]
+                    },
+                    "Sun": {
+                        service_windows: [] // No service on Sunday
+                    }
+                };
+            } else if (weekendServiceType === 'sunday-only') {
+                weekdayOverrides = {
+                    "Sat": {
+                        service_windows: [] // No service on Saturday
+                    },
+                    "Sun": {
+                        service_windows: [{
+                            start: formData.get('sunStart') + ':00',
+                            end: formData.get('sunEnd') + ':00'
+                        }]
+                    }
+                };
+            } else if (weekendServiceType === 'none') {
+                weekdayOverrides = {
+                    "Sat": {
+                        service_windows: [] // No service on Saturday
+                    },
+                    "Sun": {
+                        service_windows: [] // No service on Sunday
+                    }
+                };
             }
 
             // Generate the complete configuration

@@ -407,30 +407,25 @@
             // Always show weekday hours
             serviceHoursDisplay = `<strong>Weekday Hours:</strong> ${configData.serviceStart} - ${configData.serviceEnd}<br>`;
             
-            // Show weekend service details
-            if (configData.hasWeekendOverride && configData.weekendServiceType) {
-                switch(configData.weekendServiceType) {
-                    case 'full':
-                        serviceHoursDisplay += `<strong>Saturday Hours:</strong> ${configData.satStart} - ${configData.satEnd}<br>`;
-                        serviceHoursDisplay += `<strong>Sunday Hours:</strong> ${configData.sunStart} - ${configData.sunEnd}<br>`;
-                        break;
-                    case 'saturday-only':
-                        serviceHoursDisplay += `<strong>Saturday Hours:</strong> ${configData.satStart} - ${configData.satEnd}<br>`;
-                        serviceHoursDisplay += `<strong>Sunday Hours:</strong> No service<br>`;
-                        break;
-                    case 'sunday-only':
-                        serviceHoursDisplay += `<strong>Saturday Hours:</strong> No service<br>`;
-                        serviceHoursDisplay += `<strong>Sunday Hours:</strong> ${configData.sunStart} - ${configData.sunEnd}<br>`;
-                        break;
-                    case 'none':
-                        serviceHoursDisplay += `<strong>Saturday Hours:</strong> No service<br>`;
-                        serviceHoursDisplay += `<strong>Sunday Hours:</strong> No service<br>`;
-                        break;
-                }
-            } else {
-                // When weekend service is not configured, there's no weekend service
-                serviceHoursDisplay += `<strong>Saturday Hours:</strong> No service<br>`;
-                serviceHoursDisplay += `<strong>Sunday Hours:</strong> No service<br>`;
+            // Always show weekend service details (since weekend service is now always configured)
+            switch(configData.weekendServiceType) {
+                case 'full':
+                    serviceHoursDisplay += `<strong>Saturday Hours:</strong> ${configData.satStart} - ${configData.satEnd}<br>`;
+                    serviceHoursDisplay += `<strong>Sunday Hours:</strong> ${configData.sunStart} - ${configData.sunEnd}<br>`;
+                    break;
+                case 'saturday-only':
+                    serviceHoursDisplay += `<strong>Saturday Hours:</strong> ${configData.satStart} - ${configData.satEnd}<br>`;
+                    serviceHoursDisplay += `<strong>Sunday Hours:</strong> No service<br>`;
+                    break;
+                case 'sunday-only':
+                    serviceHoursDisplay += `<strong>Saturday Hours:</strong> No service<br>`;
+                    serviceHoursDisplay += `<strong>Sunday Hours:</strong> ${configData.sunStart} - ${configData.sunEnd}<br>`;
+                    break;
+                case 'none':
+                default:
+                    serviceHoursDisplay += `<strong>Saturday Hours:</strong> No service<br>`;
+                    serviceHoursDisplay += `<strong>Sunday Hours:</strong> No service<br>`;
+                    break;
             }
             
             const info = document.getElementById('configInfo');
@@ -445,8 +440,8 @@
             console.log('Config data loaded:', configData);
             console.log('Weekend service type:', configData.weekendServiceType);
             
-            const shouldShowWeekendCharts = configData.hasWeekendOverride && 
-                configData.weekendServiceType && 
+            // Always show weekend charts unless weekendServiceType is 'none'
+            const shouldShowWeekendCharts = configData.weekendServiceType && 
                 configData.weekendServiceType !== 'none';
                 
             console.log('Should show weekend charts:', shouldShowWeekendCharts);
