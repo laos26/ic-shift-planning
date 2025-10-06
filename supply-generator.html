@@ -337,38 +337,38 @@
         let currentSaturdaySupplyData = [];
         let currentSundaySupplyData = [];
 
-        // Standard supply shapes (hourly values for 24 hours)
+        // Standard supply shapes (hourly values for 24 hours) - units: supply hours
         const standardShapes = {
             microtransit: {
                 weekday: [
-                    0.2, 0.1, 0.1, 0.1, 0.2, 0.5, 1.2, // 00-06: very low to early morning
-                    2.5, 3.0, 2.8, // 07-09: morning peak
-                    2.2, 1.8, 1.5, // 10-12: solid demand
-                    2.0, 2.8, 3.2, 2.9, 2.5, // 13-17: afternoon peak
-                    1.8, 1.2, 0.8, 0.6, 0.4, 0.3, 0.2 // 18-23: evening dropoff
+                    0.5, 0.3, 0.3, 0.3, 0.5, 1.5, 4.0, // 00-06: very low to early morning
+                    8.0, 10.0, 9.0, // 07-09: morning peak (10 supply hours)
+                    7.0, 6.0, 5.0, // 10-12: solid demand
+                    6.5, 9.0, 10.0, 9.5, 8.0, // 13-17: afternoon peak
+                    6.0, 4.0, 2.5, 2.0, 1.3, 1.0, 0.7 // 18-23: evening dropoff
                 ],
                 weekend: [
-                    0.1, 0.1, 0.1, 0.1, 0.1, 0.2, 0.4, // 00-06: very low
-                    0.8, 1.2, 1.5, // 07-09: moderate morning
-                    1.8, 2.0, 1.9, // 10-12: weekend activity
-                    1.7, 1.9, 2.2, 2.0, 1.8, // 13-17: afternoon activity
-                    1.5, 1.0, 0.7, 0.5, 0.3, 0.2, 0.1 // 18-23: evening dropoff
+                    0.3, 0.3, 0.3, 0.3, 0.3, 0.7, 1.3, // 00-06: very low
+                    2.5, 4.0, 5.0, // 07-09: moderate morning
+                    6.0, 6.5, 6.0, // 10-12: weekend activity
+                    5.5, 6.0, 7.0, 6.5, 6.0, // 13-17: afternoon activity
+                    5.0, 3.3, 2.3, 1.7, 1.0, 0.7, 0.3 // 18-23: evening dropoff
                 ]
             },
             paratransit: {
                 weekday: [
-                    0.1, 0.1, 0.1, 0.1, 0.1, 0.3, 0.8, // 00-06: very low
-                    1.8, 2.2, 2.0, // 07-09: morning peak (lower than microtransit)
-                    1.8, 1.5, 1.2, // 10-12: steady medical appointments
-                    1.5, 2.0, 2.4, 2.2, 1.9, // 13-17: afternoon peak
-                    1.4, 0.9, 0.6, 0.4, 0.2, 0.2, 0.1 // 18-23: evening dropoff
+                    0.3, 0.3, 0.3, 0.3, 0.3, 1.0, 2.5, // 00-06: very low
+                    6.0, 7.3, 6.7, // 07-09: morning peak (lower than microtransit)
+                    6.0, 5.0, 4.0, // 10-12: steady medical appointments
+                    5.0, 6.7, 8.0, 7.3, 6.3, // 13-17: afternoon peak
+                    4.7, 3.0, 2.0, 1.3, 0.7, 0.7, 0.3 // 18-23: evening dropoff
                 ],
                 weekend: [
-                    0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2, // 00-06: very low
-                    0.4, 0.6, 0.8, // 07-09: low morning
-                    1.0, 1.2, 1.1, // 10-12: weekend medical/social
-                    1.0, 1.2, 1.4, 1.3, 1.1, // 13-17: moderate afternoon
-                    0.9, 0.6, 0.4, 0.3, 0.2, 0.1, 0.1 // 18-23: low evening
+                    0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.7, // 00-06: very low
+                    1.3, 2.0, 2.7, // 07-09: low morning
+                    3.3, 4.0, 3.7, // 10-12: weekend medical/social
+                    3.3, 4.0, 4.7, 4.3, 3.7, // 13-17: moderate afternoon
+                    3.0, 2.0, 1.3, 1.0, 0.7, 0.3, 0.3 // 18-23: low evening
                 ]
             }
         };
@@ -544,7 +544,7 @@
                             beginAtZero: true,
                             title: {
                                 display: true,
-                                text: 'Supply (Requests/Hour)'
+                                text: 'Supply Hours'
                             }
                         },
                         x: {
@@ -590,7 +590,7 @@
                     (event, elements) => {
                         if (elements.length > 0) {
                             const index = elements[0].index;
-                            const newValue = prompt(`Enter new weekday supply value for ${elements[0].element.$context.label}:`, currentWeekdaySupplyData[index]);
+                            const newValue = prompt(`Enter new weekday supply hours for ${elements[0].element.$context.label}:`, currentWeekdaySupplyData[index]);
                             if (newValue !== null && !isNaN(newValue)) {
                                 currentWeekdaySupplyData[index] = parseFloat(newValue);
                                 weekdayChart.data.datasets[0].data = currentWeekdaySupplyData;
@@ -622,7 +622,7 @@
                             (event, elements) => {
                                 if (elements.length > 0) {
                                     const index = elements[0].index;
-                                    const newValue = prompt(`Enter new Saturday supply value for ${elements[0].element.$context.label}:`, currentSaturdaySupplyData[index]);
+                                    const newValue = prompt(`Enter new Saturday supply hours for ${elements[0].element.$context.label}:`, currentSaturdaySupplyData[index]);
                                     if (newValue !== null && !isNaN(newValue)) {
                                         currentSaturdaySupplyData[index] = parseFloat(newValue);
                                         saturdayChart.data.datasets[0].data = currentSaturdaySupplyData;
@@ -656,7 +656,7 @@
                             (event, elements) => {
                                 if (elements.length > 0) {
                                     const index = elements[0].index;
-                                    const newValue = prompt(`Enter new Sunday supply value for ${elements[0].element.$context.label}:`, currentSundaySupplyData[index]);
+                                    const newValue = prompt(`Enter new Sunday supply hours for ${elements[0].element.$context.label}:`, currentSundaySupplyData[index]);
                                     if (newValue !== null && !isNaN(newValue)) {
                                         currentSundaySupplyData[index] = parseFloat(newValue);
                                         sundayChart.data.datasets[0].data = currentSundaySupplyData;
