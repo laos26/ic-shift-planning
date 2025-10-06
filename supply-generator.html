@@ -272,6 +272,10 @@
                 
                 <div class="form-row">
                     <div class="form-group">
+                        <label for="startDate">Start Date</label>
+                        <input type="date" id="startDate" name="startDate" required>
+                    </div>
+                    <div class="form-group">
                         <label for="serviceType">Service Type</label>
                         <select id="serviceType" name="serviceType">
                             <option value="microtransit">Microtransit</option>
@@ -373,114 +377,190 @@
             `;
         }
 
-        // Generate hourly supply pattern
-        function generateHourlyPattern(serviceType) {
-            const isWeekend = false; // We'll show weekday pattern by default
-            return standardShapes[serviceType][isWeekend ? 'weekend' : 'weekday'];
+        // Helper function to parse time string (HH:MM) to minutes since midnight
+        function timeToMinutes(timeStr) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return hours * 60 + minutes;
+        }
+
+        // Helper function to check if a time bin is within service hours
+        function isWithinServiceHours(dayOfWeek, hourOfDay, configData) {
+            if (!configData) return false;
+            
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Sunday = 0, Saturday = 6
+            let serviceStart, serviceEnd;
+            
+            if (isWeekend && configData.hasWeekendOverride) {
+                if (dayOfWeek === 6) { // Saturday
+                    serviceStart = timeToMinutes(configData.satStart || configData.serviceStart);
+                    serviceEnd = timeToMinutes(configData.satEnd || configData.serviceEnd);
+                } else { // Sunday
+                    serviceStart = timeToMinutes(configData.sunStart || configData.serviceStart);
+                    serviceEnd = timeToMinutes(configData.sunEnd || configData.serviceEnd);
+                }
+            } else {
+                serviceStart = timeToMinutes(configData.serviceStart);
+                serviceEnd = timeToMinutes(configData.serviceEnd);
+            }
+            
+            const currentTimeMinutes = hourOfDay * 60;
+            return currentTimeMinutes >= serviceStart && currentTimeMinutes < serviceEnd;
+        }
+
+        // Generate constrained hourly pattern (applies service hour constraints)
+        function generateConstrainedHourlyPattern(serviceType, dayOfWeek, configData) {
+            const basePattern = standardShapes[serviceType][dayOfWeek === 0 || dayOfWeek === 6 ? 'weekend' : 'weekday'];
+            const constrainedPattern = [];
+            
+            for (let hour = 0; hour < 24; hour++) {
+                if (isWithinServiceHours(dayOfWeek, hour, configData)) {
+                    constrainedPattern.push(basePattern[hour]);
+                } else {
+                    constrainedPattern.push(0); // Zero out bins outside service hours
+                }
+            }
+            
+            return constrainedPattern;
         }
 
         // Initialize chart
         function initChart() {
             const ctx = document.getElementById('supplyChart').getContext('2d');
-            const serviceType = document.getElementById('serviceType').value;
-            const hourlyData = generateHourlyPattern(serviceType);
-            currentSupplyData = [...hourlyData];
+            updateChart();
+        }
 
-            chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`),
-                    datasets: [{
-                        label: `${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} Supply`,
-                        data: currentSupplyData,
-                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
-                        borderColor: 'rgba(102, 126, 234, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Supply (Requests/Hour)'
+        // Update chart with current settings
+        function updateChart() {
+            const serviceType = document.getElementById('serviceType').value;
+            const scalingFactor = parseFloat(document.getElementById('scalingFactor').value) || 1.0;
+            
+            // Show weekday pattern with service constraints for visualization
+            const dayOfWeek = 1; // Monday for display
+            const hourlyData = generateConstrainedHourlyPattern(serviceType, dayOfWeek, configData);
+            currentSupplyData = hourlyData.map(val => val * scalingFactor);
+
+            if (chart) {
+                chart.data.datasets[0].data = currentSupplyData;
+                chart.data.datasets[0].label = `${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} Supply (Weekday)`;
+                chart.update();
+            } else {
+                const ctx = document.getElementById('supplyChart').getContext('2d');
+                chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`),
+                        datasets: [{
+                            label: `${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} Supply (Weekday)`,
+                            data: currentSupplyData,
+                            backgroundColor: function(context) {
+                                // Color bars outside service hours differently
+                                const hour = context.dataIndex;
+                                const isInService = isWithinServiceHours(1, hour, configData); // Monday
+                                return isInService ? 'rgba(102, 126, 234, 0.6)' : 'rgba(220, 53, 69, 0.3)';
+                            },
+                            borderColor: function(context) {
+                                const hour = context.dataIndex;
+                                const isInService = isWithinServiceHours(1, hour, configData);
+                                return isInService ? 'rgba(102, 126, 234, 1)' : 'rgba(220, 53, 69, 0.8)';
+                            },
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Supply (Requests/Hour)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Hour of Day'
+                                }
                             }
                         },
-                        x: {
+                        plugins: {
                             title: {
                                 display: true,
-                                text: 'Hour of Day'
+                                text: 'Supply Pattern (Red bars = outside service hours, Blue bars = within service hours)'
                             }
-                        }
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Supply Pattern (Click bars to adjust individual values)'
-                        }
-                    },
-                    onClick: (event, elements) => {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const newValue = prompt(`Enter new supply value for ${elements[0].element.$context.label}:`, currentSupplyData[index]);
-                            if (newValue !== null && !isNaN(newValue)) {
-                                currentSupplyData[index] = parseFloat(newValue);
-                                chart.data.datasets[0].data = currentSupplyData;
-                                chart.update();
+                        },
+                        onClick: (event, elements) => {
+                            if (elements.length > 0) {
+                                const index = elements[0].index;
+                                const newValue = prompt(`Enter new supply value for ${elements[0].element.$context.label}:`, currentSupplyData[index]);
+                                if (newValue !== null && !isNaN(newValue)) {
+                                    currentSupplyData[index] = parseFloat(newValue);
+                                    chart.data.datasets[0].data = currentSupplyData;
+                                    chart.update();
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
         }
 
         // Update chart when service type changes
-        document.getElementById('serviceType').addEventListener('change', function() {
-            const hourlyData = generateHourlyPattern(this.value);
-            currentSupplyData = [...hourlyData];
-            if (chart) {
-                chart.data.datasets[0].data = currentSupplyData;
-                chart.data.datasets[0].label = `${this.value.charAt(0).toUpperCase() + this.value.slice(1)} Supply`;
-                chart.update();
-            }
-        });
+        document.getElementById('serviceType').addEventListener('change', updateChart);
 
         // Apply scaling factor
-        document.getElementById('scalingFactor').addEventListener('input', function() {
-            const serviceType = document.getElementById('serviceType').value;
-            const baseData = generateHourlyPattern(serviceType);
-            const scalingFactor = parseFloat(this.value);
-            
-            currentSupplyData = baseData.map(value => value * scalingFactor);
-            if (chart) {
-                chart.data.datasets[0].data = currentSupplyData;
-                chart.update();
-            }
-        });
+        document.getElementById('scalingFactor').addEventListener('input', updateChart);
 
-        // Generate supply vector
+        // Generate supply vector (672 bins for exactly 7 days)
         function generateSupplyVector() {
             if (!configData) {
                 alert('Please configure service parameters using the Config Generator first!');
                 return;
             }
 
-            // This is a simplified version - in production you'd create the full 7-day vector
-            // with proper timestamp calculations and service hour constraints
-            
+            const startDateInput = document.getElementById('startDate').value;
+            if (!startDateInput) {
+                alert('Please select a start date!');
+                return;
+            }
+
             const serviceType = document.getElementById('serviceType').value;
-            const scalingFactor = parseFloat(document.getElementById('scalingFactor').value);
+            const scalingFactor = parseFloat(document.getElementById('scalingFactor').value) || 1.0;
             
-            // Create a simple 1-day supply vector for demonstration
+            // Calculate timestamps
+            const startDate = new Date(`${startDateInput}T00:00:00`);
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + 7); // Exactly 7 days later
+            
+            const startTimestamp = startDate.toISOString().slice(0, 19);
+            const endTimestamp = endDate.toISOString().slice(0, 19);
+            
+            // Generate exactly 672 bins (7 days * 24 hours * 4 bins per hour)
             const supply15MinBins = [];
-            currentSupplyData.forEach(hourlyValue => {
-                // Convert hourly to 15-minute bins (4 per hour)
-                const binValue = hourlyValue / 4;
-                supply15MinBins.push(binValue, binValue, binValue, binValue);
-            });
+            
+            for (let day = 0; day < 7; day++) {
+                const currentDate = new Date(startDate);
+                currentDate.setDate(currentDate.getDate() + day);
+                const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+                
+                // Get the hourly pattern for this day type with service constraints
+                const hourlyPattern = generateConstrainedHourlyPattern(serviceType, dayOfWeek, configData);
+                
+                // Convert each hour to 4 fifteen-minute bins
+                hourlyPattern.forEach(hourlyValue => {
+                    const scaledValue = hourlyValue * scalingFactor;
+                    const binValue = scaledValue / 4; // Divide by 4 for 15-minute bins
+                    
+                    // Add 4 bins for this hour (15-minute intervals)
+                    supply15MinBins.push(binValue, binValue, binValue, binValue);
+                });
+            }
+
+            // Verify we have exactly 672 bins
+            if (supply15MinBins.length !== 672) {
+                console.error(`Expected 672 bins, got ${supply15MinBins.length}`);
+            }
 
             generatedSupplyVector = [{
                 "attributes": {
@@ -489,8 +569,8 @@
                     "includes": []
                 },
                 "supply": {
-                    "start_ts": "2025-06-30T04:45:00",
-                    "end_ts": "2025-07-07T23:30:00",
+                    "start_ts": startTimestamp,
+                    "end_ts": endTimestamp,
                     "supply": supply15MinBins,
                     "timestep_width": 900
                 }
@@ -502,6 +582,8 @@
             
             // Scroll to output
             document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+            
+            console.log(`Generated supply vector with ${supply15MinBins.length} bins from ${startTimestamp} to ${endTimestamp}`);
         }
 
         // Download supply vector
@@ -524,6 +606,11 @@
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
+            // Set default start date to today
+            const today = new Date();
+            const dateString = today.toISOString().split('T')[0];
+            document.getElementById('startDate').value = dateString;
+            
             loadConfigData();
             initChart();
         });
