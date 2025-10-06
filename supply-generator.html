@@ -866,14 +866,18 @@
             const serviceType = document.getElementById('serviceType').value;
             const scalingFactor = parseFloat(document.getElementById('scalingFactor').value) || 1.0;
             
-            // Force start date to be a Monday
-            const inputDate = new Date(`${startDateInput}T00:00:00`);
-            const startDate = getNextMonday(inputDate);
+            // Use the exact start date provided by user (no forcing to Monday)
+            const startDate = new Date(`${startDateInput}T00:00:00`);
             const endDate = new Date(startDate);
             endDate.setDate(endDate.getDate() + 7); // Exactly 7 days later
             
-            const startTimestamp = startDate.toISOString().slice(0, 19);
-            const endTimestamp = endDate.toISOString().slice(0, 19);
+            // Generate timestamps in local time format (not UTC)
+            const startTimestamp = startDate.getFullYear() + '-' + 
+                String(startDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                String(startDate.getDate()).padStart(2, '0') + 'T00:00:00';
+            const endTimestamp = endDate.getFullYear() + '-' + 
+                String(endDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                String(endDate.getDate()).padStart(2, '0') + 'T00:00:00';
             
             // Generate exactly 672 bins (7 days * 24 hours * 4 bins per hour)
             const supply15MinBins = [];
@@ -1052,9 +1056,9 @@
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
-            // Set start date to next Monday
-            const nextMonday = getNextMonday();
-            const dateString = nextMonday.toISOString().split('T')[0];
+            // Set start date to today's date
+            const today = new Date();
+            const dateString = today.toISOString().split('T')[0];
             document.getElementById('startDate').value = dateString;
             
             loadConfigData();
