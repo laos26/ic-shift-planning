@@ -759,7 +759,8 @@
                 
                 // Convert each hour to 4 fifteen-minute bins
                 hourlyPattern.forEach(hourlyValue => {
-                    const binValue = hourlyValue / 4; // Divide by 4 for 15-minute bins
+                    // Each 15-minute bin should have the same supply hours as the hourly value
+                    const binValue = hourlyValue; // Keep the same value - supply hours available per bin
                     
                     // Add 4 bins for this hour (15-minute intervals)
                     supply15MinBins.push(binValue, binValue, binValue, binValue);
