@@ -526,7 +526,8 @@
                 satEnd: formData.get('satEnd'),
                 sunStart: formData.get('sunStart'),
                 sunEnd: formData.get('sunEnd'),
-                timezone: formData.get('timezone')
+                timezone: formData.get('timezone'),
+                nte: parseInt(formData.get('nte')) // Add NTE for supply generator comparison
             };
             console.log('Storing config data for supply generator:', configDataForSupply);
             localStorage.setItem('transitConfigData', JSON.stringify(configDataForSupply));

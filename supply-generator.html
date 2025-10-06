@@ -270,6 +270,25 @@
                     </div>
                 </div>
                 
+                <div class="info-box">
+                    <div class="title">Weekly Supply Hours</div>
+                    <div class="content" id="nteComparison">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span><strong>Target NTE:</strong></span>
+                            <span id="targetNTE" style="color: #2c5aa0; font-weight: bold;">--</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span><strong>Current Total:</strong></span>
+                            <span id="currentTotal" style="color: #333; font-weight: bold;">--</span>
+                        </div>
+                        <hr style="margin: 8px 0; border: none; border-top: 1px solid #ddd;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span><strong>Difference:</strong></span>
+                            <span id="difference" style="font-weight: bold;">--</span>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="form-row">
                     <div class="form-group">
                         <label for="startDate">Start Date</label>
@@ -380,6 +399,7 @@
                 configData = JSON.parse(stored);
                 console.log('Loaded config data:', configData);
                 updateConfigInfo();
+                updateNTEComparison(); // Update NTE comparison when config loads
                 // Update charts after loading config data
                 if (weekdayChart) {
                     updateCharts();
@@ -452,6 +472,57 @@
             } else {
                 weekendContainer.style.display = 'none';
                 console.log('Hiding weekend charts container');
+            }
+        }
+
+        // Calculate total supply hours for the week
+        function calculateTotalSupplyHours() {
+            let totalHours = 0;
+            
+            // Add weekday hours (Monday-Friday)
+            if (currentWeekdaySupplyData.length > 0) {
+                const weekdayTotal = currentWeekdaySupplyData.reduce((sum, hours) => sum + hours, 0);
+                totalHours += weekdayTotal * 5; // 5 weekdays
+            }
+            
+            // Add weekend hours if applicable
+            if (configData && configData.weekendServiceType !== 'none') {
+                if (configData.weekendServiceType === 'full' || configData.weekendServiceType === 'saturday-only') {
+                    if (currentSaturdaySupplyData.length > 0) {
+                        totalHours += currentSaturdaySupplyData.reduce((sum, hours) => sum + hours, 0);
+                    }
+                }
+                if (configData.weekendServiceType === 'full' || configData.weekendServiceType === 'sunday-only') {
+                    if (currentSundaySupplyData.length > 0) {
+                        totalHours += currentSundaySupplyData.reduce((sum, hours) => sum + hours, 0);
+                    }
+                }
+            }
+            
+            return totalHours;
+        }
+
+        // Update NTE comparison display
+        function updateNTEComparison() {
+            if (!configData) return;
+            
+            const targetNTE = configData.nte || 0;
+            const currentTotal = calculateTotalSupplyHours();
+            const difference = currentTotal - targetNTE;
+            
+            document.getElementById('targetNTE').textContent = `${targetNTE} hours`;
+            document.getElementById('currentTotal').textContent = `${currentTotal.toFixed(1)} hours`;
+            
+            const differenceElement = document.getElementById('difference');
+            if (difference > 0) {
+                differenceElement.textContent = `+${difference.toFixed(1)} hours`;
+                differenceElement.style.color = '#d63384'; // Red for over
+            } else if (difference < 0) {
+                differenceElement.textContent = `${difference.toFixed(1)} hours`;
+                differenceElement.style.color = '#fd7e14'; // Orange for under
+            } else {
+                differenceElement.textContent = '0 hours';
+                differenceElement.style.color = '#198754'; // Green for exact match
             }
         }
 
@@ -595,6 +666,7 @@
                                 currentWeekdaySupplyData[index] = parseFloat(newValue);
                                 weekdayChart.data.datasets[0].data = currentWeekdaySupplyData;
                                 weekdayChart.update();
+                                updateNTEComparison(); // Update NTE when manually edited
                             }
                         }
                     }
@@ -627,6 +699,7 @@
                                         currentSaturdaySupplyData[index] = parseFloat(newValue);
                                         saturdayChart.data.datasets[0].data = currentSaturdaySupplyData;
                                         saturdayChart.update();
+                                        updateNTEComparison(); // Update NTE when manually edited
                                     }
                                 }
                             }
@@ -661,6 +734,7 @@
                                         currentSundaySupplyData[index] = parseFloat(newValue);
                                         sundayChart.data.datasets[0].data = currentSundaySupplyData;
                                         sundayChart.update();
+                                        updateNTEComparison(); // Update NTE when manually edited
                                     }
                                 }
                             }
@@ -682,6 +756,9 @@
                 currentSaturdaySupplyData = Array(24).fill(0);
                 currentSundaySupplyData = Array(24).fill(0);
             }
+            
+            // Update NTE comparison whenever charts are updated
+            updateNTEComparison();
         }
 
         // Update charts when service type changes
