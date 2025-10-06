@@ -249,7 +249,7 @@
     <div class="container">
         <div class="header">
             <h1>Supply Vector Generator</h1>
-            <p>Generate demand-based supply vectors for transit shift planning</p>
+            <p>Generate demand-based supply vectors for shift planning</p>
         </div>
 
         <div class="nav-container">
@@ -360,34 +360,72 @@
         const standardShapes = {
             microtransit: {
                 weekday: [
-                    0.625, 0.3125, 0.3125, 0.3125, 0.625, 1.5625, 3.75, // 00-06: very low to early morning
-                    7.8125, 9.375, 8.75, // 07-09: morning peak
-                    6.875, 5.625, 4.6875, // 10-12: solid demand
-                    6.25, 8.75, 10.0, 9.0625, 7.8125, // 13-17: afternoon peak (10.0 is the peak)
-                    5.625, 3.75, 2.5, 1.875, 1.25, 0.9375, 0.625 // 18-23: evening dropoff
+                    // 00:00-05:00: 1.0 ratio → 2.86 hours (scaled by 10/3.5)
+                    2.86, 2.86, 2.86, 2.86, 2.86, 
+                    // 05:00-07:00: 1.5 ratio → 4.29 hours
+                    4.29, 4.29,
+                    // 07:00-11:00: 3.0 ratio → 8.57 hours
+                    8.57, 8.57, 8.57, 8.57,
+                    // 11:00-13:00: 2.5 ratio → 7.14 hours
+                    7.14, 7.14,
+                    // 13:00-16:00: 3.5 ratio → 10.0 hours (peak)
+                    10.0, 10.0, 10.0,
+                    // 16:00-17:00: 3.0 ratio → 8.57 hours
+                    8.57,
+                    // 17:00-20:00: 2.0 ratio → 5.71 hours
+                    5.71, 5.71, 5.71,
+                    // 20:00-24:00: 1.0 ratio → 2.86 hours
+                    2.86, 2.86, 2.86, 2.86
                 ],
                 weekend: [
-                    0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.625, 1.25, // 00-06: very low
-                    2.5, 3.75, 4.6875, // 07-09: moderate morning
-                    5.625, 6.25, 5.9375, // 10-12: weekend activity
-                    5.3125, 5.9375, 6.875, 6.25, 5.625, // 13-17: afternoon activity
-                    4.6875, 3.125, 2.1875, 1.5625, 0.9375, 0.625, 0.3125 // 18-23: evening dropoff
+                    // 00:00-07:00: 1.0 ratio → 1.71 hours (scaled by 6/3.5)
+                    1.71, 1.71, 1.71, 1.71, 1.71, 1.71, 1.71,
+                    // 07:00-09:00: 1.5 ratio → 2.57 hours
+                    2.57, 2.57,
+                    // 09:00-10:00: 2.5 ratio → 4.29 hours
+                    4.29,
+                    // 10:00-11:00: 3.0 ratio → 5.14 hours
+                    5.14,
+                    // 11:00-16:00: 3.5 ratio → 6.0 hours (peak)
+                    6.0, 6.0, 6.0, 6.0, 6.0,
+                    // 16:00-17:00: 3.0 ratio → 5.14 hours
+                    5.14,
+                    // 17:00-20:00: 2.0 ratio → 3.43 hours
+                    3.43, 3.43, 3.43,
+                    // 20:00-24:00: 1.0 ratio → 1.71 hours
+                    1.71, 1.71, 1.71, 1.71
                 ]
             },
             paratransit: {
                 weekday: [
-                    0.417, 0.417, 0.417, 0.417, 0.417, 1.25, 3.33, // 00-06: very low
-                    7.5, 9.167, 8.33, // 07-09: morning peak
-                    7.5, 6.25, 5.0, // 10-12: steady medical appointments
-                    6.25, 8.33, 10.0, 9.167, 7.917, // 13-17: afternoon peak (10.0 is the peak)
-                    5.833, 3.75, 2.5, 1.667, 0.833, 0.833, 0.417 // 18-23: evening dropoff
+                    // 00:00-05:00: 1.0 ratio → 3.33 hours (scaled by 10/3.0)
+                    3.33, 3.33, 3.33, 3.33, 3.33,
+                    // 05:00-07:00: 1.5 ratio → 5.0 hours
+                    5.0, 5.0,
+                    // 07:00-16:00: 3.0 ratio → 10.0 hours (peak)
+                    10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0,
+                    // 16:00-17:00: 2.5 ratio → 8.33 hours
+                    8.33,
+                    // 17:00-20:00: 2.0 ratio → 6.67 hours
+                    6.67, 6.67, 6.67,
+                    // 20:00-24:00: 1.0 ratio → 3.33 hours
+                    3.33, 3.33, 3.33, 3.33
                 ],
                 weekend: [
-                    0.417, 0.417, 0.417, 0.417, 0.417, 0.417, 0.833, // 00-06: very low
-                    1.667, 2.5, 3.33, // 07-09: low morning
-                    4.167, 5.0, 4.583, // 10-12: weekend medical/social
-                    4.167, 5.0, 5.833, 5.417, 4.583, // 13-17: moderate afternoon
-                    3.75, 2.5, 1.667, 1.25, 0.833, 0.417, 0.417 // 18-23: low evening
+                    // 00:00-07:00: 1.0 ratio → 1.71 hours (scaled by 6/3.5)
+                    1.71, 1.71, 1.71, 1.71, 1.71, 1.71, 1.71,
+                    // 07:00-09:00: 1.5 ratio → 2.57 hours
+                    2.57, 2.57,
+                    // 09:00-11:00: 2.5 ratio → 4.29 hours
+                    4.29, 4.29,
+                    // 11:00-16:00: 3.5 ratio → 6.0 hours (peak)
+                    6.0, 6.0, 6.0, 6.0, 6.0,
+                    // 16:00-17:00: 2.5 ratio → 4.29 hours
+                    4.29,
+                    // 17:00-20:00: 1.5 ratio → 2.57 hours
+                    2.57, 2.57, 2.57,
+                    // 20:00-24:00: 1.0 ratio → 1.71 hours
+                    1.71, 1.71, 1.71, 1.71
                 ]
             }
         };
@@ -574,6 +612,51 @@
             
             const currentTimeMinutes = hourOfDay * 60;
             return currentTimeMinutes >= serviceStart && currentTimeMinutes < serviceEnd;
+        }
+
+        // Helper function to check if a 15-minute time bin is within service hours
+        function isBinWithinServiceHours(dayOfWeek, hourOfDay, binIndex, configData) {
+            if (!configData) return false;
+            
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Sunday = 0, Saturday = 6
+            
+            // Handle weekend service types
+            if (isWeekend && configData.hasWeekendOverride) {
+                const weekendServiceType = configData.weekendServiceType || 'full';
+                
+                // Check if this specific day has no service
+                if (weekendServiceType === 'none') {
+                    return false; // No weekend service at all
+                } else if (weekendServiceType === 'saturday-only' && dayOfWeek === 0) {
+                    return false; // No Sunday service
+                } else if (weekendServiceType === 'sunday-only' && dayOfWeek === 6) {
+                    return false; // No Saturday service
+                }
+            }
+            
+            let serviceStart, serviceEnd;
+            
+            if (isWeekend && configData.hasWeekendOverride && configData.weekendServiceType !== 'none') {
+                if (dayOfWeek === 6 && (configData.weekendServiceType === 'full' || configData.weekendServiceType === 'saturday-only')) {
+                    // Saturday service
+                    serviceStart = timeToMinutes(configData.satStart || configData.serviceStart);
+                    serviceEnd = timeToMinutes(configData.satEnd || configData.serviceEnd);
+                } else if (dayOfWeek === 0 && (configData.weekendServiceType === 'full' || configData.weekendServiceType === 'sunday-only')) {
+                    // Sunday service
+                    serviceStart = timeToMinutes(configData.sunStart || configData.serviceStart);
+                    serviceEnd = timeToMinutes(configData.sunEnd || configData.serviceEnd);
+                } else {
+                    return false; // This day has no service
+                }
+            } else {
+                // Weekday service
+                serviceStart = timeToMinutes(configData.serviceStart);
+                serviceEnd = timeToMinutes(configData.serviceEnd);
+            }
+            
+            // Calculate the exact time for this 15-minute bin
+            const binTimeMinutes = hourOfDay * 60 + (binIndex * 15);
+            return binTimeMinutes >= serviceStart && binTimeMinutes < serviceEnd;
         }
 
         // Generate constrained hourly pattern (applies service hour constraints)
@@ -834,13 +917,22 @@
                         generateConstrainedHourlyPattern(serviceType, dayOfWeek, configData).map(val => val * scalingFactor);
                 }
                 
-                // Convert each hour to 4 fifteen-minute bins
-                hourlyPattern.forEach(hourlyValue => {
-                    const binValue = hourlyValue / 4; // Divide by 4 for 15-minute bins
+                // Convert each hour to 4 fifteen-minute bins with granular service hour checking
+                for (let hour = 0; hour < 24; hour++) {
+                    const hourlyValue = hourlyPattern[hour];
+                    const baseBinValue = hourlyValue / 4; // Base value for 15-minute bins
                     
-                    // Add 4 bins for this hour (15-minute intervals)
-                    supply15MinBins.push(binValue, binValue, binValue, binValue);
-                });
+                    // Check each of the 4 fifteen-minute bins for this hour
+                    for (let binIndex = 0; binIndex < 4; binIndex++) {
+                        let finalBinValue;
+                        if (isBinWithinServiceHours(dayOfWeek, hour, binIndex, configData)) {
+                            finalBinValue = Math.round(baseBinValue * 10) / 10; // Round to nearest tenth
+                        } else {
+                            finalBinValue = 0; // Zero if outside service hours
+                        }
+                        supply15MinBins.push(finalBinValue);
+                    }
+                }
             }
 
             // Verify we have exactly 672 bins
