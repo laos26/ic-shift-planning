@@ -231,6 +231,13 @@
             <p>Create IC shift planning configs and supply vectors</p>
         </div>
 
+        <div class="nav-container" style="background: #f8f9fa; padding: 20px 40px; border-bottom: 1px solid #e1e8ed;">
+            <div class="nav-links" style="display: flex; gap: 20px; align-items: center;">
+                <a href="index.html" class="nav-link active" style="display: inline-block; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; background: linear-gradient(135deg, #667eea, #764ba2); color: white;">🚌 Config Generator</a>
+                <a href="supply-generator.html" class="nav-link" style="display: inline-block; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; background: white; color: #2c3e50; border: 2px solid #e1e8ed;">📊 Supply Generator</a>
+            </div>
+        </div>
+
         <div class="form-container">
             <form id="configForm">
                 <!-- Basic Configuration -->
@@ -476,6 +483,20 @@
         function generateConfig() {
             const form = document.getElementById('configForm');
             const formData = new FormData(form);
+            
+            // Store config data for supply generator
+            const configDataForSupply = {
+                cityName: formData.get('cityName'),
+                serviceStart: formData.get('serviceStart'),
+                serviceEnd: formData.get('serviceEnd'),
+                hasWeekendOverride: formData.get('enableWeekendOverride') ? true : false,
+                satStart: formData.get('satStart'),
+                satEnd: formData.get('satEnd'),
+                sunStart: formData.get('sunStart'),
+                sunEnd: formData.get('sunEnd'),
+                timezone: formData.get('timezone')
+            };
+            localStorage.setItem('transitConfigData', JSON.stringify(configDataForSupply));
             
             // Parse ramp configurations
             const shiftRampUp = parseRampValues(formData.get('shiftRampUp'));
