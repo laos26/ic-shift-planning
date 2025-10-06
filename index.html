@@ -454,6 +454,7 @@
                 <div class="btn-container">
                     <button type="submit" class="btn">Generate Config</button>
                     <button type="button" class="btn btn-secondary" onclick="downloadConfig()">Download JSON</button>
+                    <button type="button" class="btn btn-secondary" onclick="copyConfigToClipboard()" style="display: none;" id="copyConfigBtn">Copy to Clipboard</button>
                 </div>
             </form>
 
@@ -722,6 +723,7 @@
             // Display the generated config
             document.getElementById('configOutput').textContent = JSON.stringify(generatedConfig, null, 2);
             document.getElementById('outputSection').style.display = 'block';
+            document.getElementById('copyConfigBtn').style.display = 'inline-block';
             
             // Scroll to output
             document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
@@ -742,6 +744,58 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        function copyConfigToClipboard() {
+            if (!generatedConfig) {
+                alert('Please generate a configuration first!');
+                return;
+            }
+
+            const configText = JSON.stringify(generatedConfig, null, 2);
+            
+            // Use the modern Clipboard API if available
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(configText).then(() => {
+                    showCopyFeedback('copyConfigBtn', 'Copied!');
+                }).catch(() => {
+                    fallbackCopyToClipboard(configText);
+                });
+            } else {
+                fallbackCopyToClipboard(configText);
+            }
+        }
+
+        // Fallback for older browsers or non-HTTPS
+        function fallbackCopyToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showCopyFeedback('copyConfigBtn', 'Copied!');
+            } catch (err) {
+                alert('Failed to copy to clipboard. Please copy manually.');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // Show temporary feedback when copying
+        function showCopyFeedback(buttonId, message) {
+            const button = document.getElementById(buttonId);
+            const originalText = button.textContent;
+            button.textContent = message;
+            button.style.background = '#28a745';
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.background = '';
+            }, 2000);
         }
     </script>
 </body>

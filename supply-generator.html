@@ -314,6 +314,7 @@
                     </div>
                     <button class="btn" onclick="generateSupplyVector()">Generate Supply Vector</button>
                     <button class="btn btn-secondary" onclick="downloadSupplyVector()">Download JSON</button>
+                    <button class="btn btn-secondary" onclick="copySupplyToClipboard()" style="display: none;" id="copySupplyBtn">Copy to Clipboard</button>
                 </div>
             </div>
 
@@ -791,6 +792,7 @@
             // Display the generated supply vector
             document.getElementById('supplyOutput').textContent = JSON.stringify(generatedSupplyVector, null, 2);
             document.getElementById('outputSection').style.display = 'block';
+            document.getElementById('copySupplyBtn').style.display = 'inline-block';
             
             // Scroll to output
             document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
@@ -814,6 +816,58 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        function copySupplyToClipboard() {
+            if (!generatedSupplyVector) {
+                alert('Please generate a supply vector first!');
+                return;
+            }
+
+            const supplyText = JSON.stringify(generatedSupplyVector, null, 2);
+            
+            // Use the modern Clipboard API if available
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(supplyText).then(() => {
+                    showCopyFeedback('copySupplyBtn', 'Copied!');
+                }).catch(() => {
+                    fallbackCopyToClipboard(supplyText);
+                });
+            } else {
+                fallbackCopyToClipboard(supplyText);
+            }
+        }
+
+        // Fallback for older browsers or non-HTTPS
+        function fallbackCopyToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showCopyFeedback('copySupplyBtn', 'Copied!');
+            } catch (err) {
+                alert('Failed to copy to clipboard. Please copy manually.');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // Show temporary feedback when copying
+        function showCopyFeedback(buttonId, message) {
+            const button = document.getElementById(buttonId);
+            const originalText = button.textContent;
+            button.textContent = message;
+            button.style.background = '#28a745';
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.background = '';
+            }, 2000);
         }
 
         // Initialize page
