@@ -428,8 +428,9 @@
                         break;
                 }
             } else {
-                serviceHoursDisplay += `<strong>Saturday Hours:</strong> Same as weekday<br>`;
-                serviceHoursDisplay += `<strong>Sunday Hours:</strong> Same as weekday<br>`;
+                // When weekend service is not configured, there's no weekend service
+                serviceHoursDisplay += `<strong>Saturday Hours:</strong> No service<br>`;
+                serviceHoursDisplay += `<strong>Sunday Hours:</strong> No service<br>`;
             }
             
             const info = document.getElementById('configInfo');
