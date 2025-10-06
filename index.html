@@ -400,52 +400,28 @@
                     <h3>Shift Constraints</h3>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="maxContinuousDriving">Maximum Continuous Driving Time (minutes)</label>
-                            <input type="number" id="maxContinuousDriving" name="maxContinuousDriving" required min="0" value="300" step="15">
-                        </div>
-                        <div class="form-group">
                             <label for="minShiftLength">Minimum Shift Length (minutes)</label>
                             <input type="number" id="minShiftLength" name="minShiftLength" required min="0" value="480" step="15">
                         </div>
-                    </div>
-                    <div class="form-row">
                         <div class="form-group">
                             <label for="maxShiftLength">Maximum Shift Length (minutes)</label>
                             <input type="number" id="maxShiftLength" name="maxShiftLength" required min="0" value="720" step="15">
                         </div>
-                        <div class="form-group">
-                            <label for="maxShiftWithOneBreak">Maximum Shift Length with One Break (minutes)</label>
-                            <input type="number" id="maxShiftWithOneBreak" name="maxShiftWithOneBreak" required min="0" value="720" step="15">
-                        </div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group">
-                            <label for="minBreakLength">Minimum Break Length (minutes)</label>
-                            <input type="number" id="minBreakLength" name="minBreakLength" required min="0" value="30" step="15">
-                        </div>
-                        <div class="form-group">
-                            <label for="maxBreakLength">Maximum Break Length (minutes)</label>
-                            <input type="number" id="maxBreakLength" name="maxBreakLength" required min="0" value="30" step="15">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="maxBreakTimesteps">Maximum Number of Break Timesteps</label>
-                            <input type="number" id="maxBreakTimesteps" name="maxBreakTimesteps" required min="0" value="2" step="1">
-                        </div>
                         <div class="form-group">
                             <label for="minActiveVehicles">Minimum Active Vehicles</label>
-                            <input type="number" id="minActiveVehicles" name="minActiveVehicles" required min="0" value="2" step="1">
+                            <input type="number" id="minActiveVehicles" name="minActiveVehicles" required min="0" value="1" step="1">
                         </div>
-                    </div>
-                    <div class="form-row">
                         <div class="form-group">
                             <label for="longShortBoundary">Long/Short Shift Boundary (minutes)</label>
                             <input type="number" id="longShortBoundary" name="longShortBoundary" required min="0" value="510" step="15">
                         </div>
+                    </div>
+                    <div class="form-row">
                         <div class="form-group">
                             <label for="minShortShifts">Minimum Number of Short Shifts</label>
-                            <input type="number" id="minShortShifts" name="minShortShifts" required min="0" value="2" step="1">
+                            <input type="number" id="minShortShifts" name="minShortShifts" required min="0" value="0" step="1">
                         </div>
                     </div>
                 </div>
@@ -728,13 +704,8 @@
                 },
                 "default_shift_optimizer_configuration": {
                     "constraints": {
-                        "max_continuous_driving_time": Math.round(parseInt(formData.get('maxContinuousDriving')) / 15),
                         "min_driving_net": Math.round(parseInt(formData.get('minShiftLength')) / 15),
                         "max_driving_net": Math.round(parseInt(formData.get('maxShiftLength')) / 15),
-                        "min_break_length": Math.round(parseInt(formData.get('minBreakLength')) / 15),
-                        "max_break_length": Math.round(parseInt(formData.get('maxBreakLength')) / 15),
-                        "max_number_break_timesteps": parseInt(formData.get('maxBreakTimesteps')),
-                        "max_driving_net_with_one_break": Math.round(parseInt(formData.get('maxShiftWithOneBreak')) / 15),
                         "absolute_minimum_active_vehicles": parseInt(formData.get('minActiveVehicles')),
                         "long_short_boundary": Math.round(parseInt(formData.get('longShortBoundary')) / 15),
                         "min_num_short_shifts": parseInt(formData.get('minShortShifts'))
@@ -744,25 +715,6 @@
                         "very_undersupply_threshold": 0.5,
                         "rel_tolerance": 0.05,
                         "lp_timeout": 10000
-                    },
-                    "combinator_whitelist": {
-                        "shifts": [
-                            {
-                                "subshifts": [{"length": 12}, {"length": 18}],
-                                "breaks": [{"length": 8}],
-                                "handover": 2
-                            },
-                            {
-                                "subshifts": [{"length": 18}, {"length": 12}],
-                                "breaks": [{"length": 8}],
-                                "handover": 2
-                            },
-                            {
-                                "subshifts": [{"length": 15}, {"length": 15}],
-                                "breaks": [{"length": 12}],
-                                "handover": 2
-                            }
-                        ]
                     }
                 }
             };
