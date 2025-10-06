@@ -401,20 +401,31 @@
         function updateConfigInfo() {
             if (!configData) return;
             
+            let weekendStatusText = 'No';
+            if (configData.hasWeekendOverride) {
+                switch(configData.weekendServiceType) {
+                    case 'full': weekendStatusText = 'Yes (Both days)'; break;
+                    case 'saturday-only': weekendStatusText = 'Saturday only'; break;
+                    case 'sunday-only': weekendStatusText = 'Sunday only'; break;
+                    case 'none': weekendStatusText = 'No weekend service'; break;
+                    default: weekendStatusText = 'Yes'; break;
+                }
+            }
+            
             const info = document.getElementById('configInfo');
             info.innerHTML = `
                 <strong>City:</strong> ${configData.cityName}<br>
                 <strong>Service Hours:</strong> ${configData.serviceStart} - ${configData.serviceEnd}<br>
-                <strong>Weekend Override:</strong> ${configData.hasWeekendOverride ? 'Yes' : 'No'}<br>
+                <strong>Weekend Service:</strong> ${weekendStatusText}<br>
                 <strong>Timezone:</strong> ${configData.timezone}
             `;
 
-            // Show/hide weekend charts based on weekend override
+            // Show/hide weekend charts based on weekend service type
             const weekendContainer = document.getElementById('weekendChartsContainer');
             console.log('Config data:', configData);
-            console.log('Weekend override:', configData.hasWeekendOverride);
+            console.log('Weekend service type:', configData.weekendServiceType);
             
-            if (configData.hasWeekendOverride) {
+            if (configData.hasWeekendOverride && configData.weekendServiceType && configData.weekendServiceType !== 'none') {
                 weekendContainer.style.display = 'block';
                 console.log('Showing weekend charts');
             } else {
@@ -434,17 +445,37 @@
             if (!configData) return false;
             
             const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Sunday = 0, Saturday = 6
+            
+            // Handle weekend service types
+            if (isWeekend && configData.hasWeekendOverride) {
+                const weekendServiceType = configData.weekendServiceType || 'full';
+                
+                // Check if this specific day has no service
+                if (weekendServiceType === 'none') {
+                    return false; // No weekend service at all
+                } else if (weekendServiceType === 'saturday-only' && dayOfWeek === 0) {
+                    return false; // No Sunday service
+                } else if (weekendServiceType === 'sunday-only' && dayOfWeek === 6) {
+                    return false; // No Saturday service
+                }
+            }
+            
             let serviceStart, serviceEnd;
             
-            if (isWeekend && configData.hasWeekendOverride) {
-                if (dayOfWeek === 6) { // Saturday
+            if (isWeekend && configData.hasWeekendOverride && configData.weekendServiceType !== 'none') {
+                if (dayOfWeek === 6 && (configData.weekendServiceType === 'full' || configData.weekendServiceType === 'saturday-only')) {
+                    // Saturday service
                     serviceStart = timeToMinutes(configData.satStart || configData.serviceStart);
                     serviceEnd = timeToMinutes(configData.satEnd || configData.serviceEnd);
-                } else { // Sunday
+                } else if (dayOfWeek === 0 && (configData.weekendServiceType === 'full' || configData.weekendServiceType === 'sunday-only')) {
+                    // Sunday service
                     serviceStart = timeToMinutes(configData.sunStart || configData.serviceStart);
                     serviceEnd = timeToMinutes(configData.sunEnd || configData.serviceEnd);
+                } else {
+                    return false; // This day has no service
                 }
             } else {
+                // Weekday service
                 serviceStart = timeToMinutes(configData.serviceStart);
                 serviceEnd = timeToMinutes(configData.serviceEnd);
             }
@@ -549,56 +580,60 @@
                 );
             }
 
-            // Weekend charts (only if weekend overrides exist)
-            if (configData && configData.hasWeekendOverride) {
-                // Saturday (6)
-                const saturdayData = generateConstrainedHourlyPattern(serviceType, 6, configData);
-                currentSaturdaySupplyData = saturdayData.map(val => val * scalingFactor);
+            // Weekend charts (only if weekend overrides exist and service is available)
+            if (configData && configData.hasWeekendOverride && configData.weekendServiceType && configData.weekendServiceType !== 'none') {
+                // Saturday chart (only if Saturday service is enabled)
+                if (configData.weekendServiceType === 'full' || configData.weekendServiceType === 'saturday-only') {
+                    const saturdayData = generateConstrainedHourlyPattern(serviceType, 6, configData);
+                    currentSaturdaySupplyData = saturdayData.map(val => val * scalingFactor);
 
-                if (saturdayChart) {
-                    saturdayChart.data.datasets[0].data = currentSaturdaySupplyData;
-                    saturdayChart.update();
-                } else {
-                    saturdayChart = createChart('saturdayChart',
-                        `${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} Supply`,
-                        currentSaturdaySupplyData,
-                        (event, elements) => {
-                            if (elements.length > 0) {
-                                const index = elements[0].index;
-                                const newValue = prompt(`Enter new Saturday supply value for ${elements[0].element.$context.label}:`, currentSaturdaySupplyData[index]);
-                                if (newValue !== null && !isNaN(newValue)) {
-                                    currentSaturdaySupplyData[index] = parseFloat(newValue);
-                                    saturdayChart.data.datasets[0].data = currentSaturdaySupplyData;
-                                    saturdayChart.update();
+                    if (saturdayChart) {
+                        saturdayChart.data.datasets[0].data = currentSaturdaySupplyData;
+                        saturdayChart.update();
+                    } else {
+                        saturdayChart = createChart('saturdayChart',
+                            `${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} Supply`,
+                            currentSaturdaySupplyData,
+                            (event, elements) => {
+                                if (elements.length > 0) {
+                                    const index = elements[0].index;
+                                    const newValue = prompt(`Enter new Saturday supply value for ${elements[0].element.$context.label}:`, currentSaturdaySupplyData[index]);
+                                    if (newValue !== null && !isNaN(newValue)) {
+                                        currentSaturdaySupplyData[index] = parseFloat(newValue);
+                                        saturdayChart.data.datasets[0].data = currentSaturdaySupplyData;
+                                        saturdayChart.update();
+                                    }
                                 }
                             }
-                        }
-                    );
+                        );
+                    }
                 }
 
-                // Sunday (0)
-                const sundayData = generateConstrainedHourlyPattern(serviceType, 0, configData);
-                currentSundaySupplyData = sundayData.map(val => val * scalingFactor);
+                // Sunday chart (only if Sunday service is enabled)
+                if (configData.weekendServiceType === 'full' || configData.weekendServiceType === 'sunday-only') {
+                    const sundayData = generateConstrainedHourlyPattern(serviceType, 0, configData);
+                    currentSundaySupplyData = sundayData.map(val => val * scalingFactor);
 
-                if (sundayChart) {
-                    sundayChart.data.datasets[0].data = currentSundaySupplyData;
-                    sundayChart.update();
-                } else {
-                    sundayChart = createChart('sundayChart',
-                        `${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} Supply`,
-                        currentSundaySupplyData,
-                        (event, elements) => {
-                            if (elements.length > 0) {
-                                const index = elements[0].index;
-                                const newValue = prompt(`Enter new Sunday supply value for ${elements[0].element.$context.label}:`, currentSundaySupplyData[index]);
-                                if (newValue !== null && !isNaN(newValue)) {
-                                    currentSundaySupplyData[index] = parseFloat(newValue);
-                                    sundayChart.data.datasets[0].data = currentSundaySupplyData;
-                                    sundayChart.update();
+                    if (sundayChart) {
+                        sundayChart.data.datasets[0].data = currentSundaySupplyData;
+                        sundayChart.update();
+                    } else {
+                        sundayChart = createChart('sundayChart',
+                            `${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} Supply`,
+                            currentSundaySupplyData,
+                            (event, elements) => {
+                                if (elements.length > 0) {
+                                    const index = elements[0].index;
+                                    const newValue = prompt(`Enter new Sunday supply value for ${elements[0].element.$context.label}:`, currentSundaySupplyData[index]);
+                                    if (newValue !== null && !isNaN(newValue)) {
+                                        currentSundaySupplyData[index] = parseFloat(newValue);
+                                        sundayChart.data.datasets[0].data = currentSundaySupplyData;
+                                        sundayChart.update();
+                                    }
                                 }
                             }
-                        }
-                    );
+                        );
+                    }
                 }
             }
         }

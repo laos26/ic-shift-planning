@@ -322,29 +322,55 @@
 
                     <div class="checkbox-group">
                         <input type="checkbox" id="enableWeekendOverride" name="enableWeekendOverride">
-                        <label for="enableWeekendOverride">Enable Weekend Service Hour Overrides</label>
+                        <label for="enableWeekendOverride">Configure Weekend Service</label>
                     </div>
 
                     <div id="weekendOverrides" class="weekend-override" style="display: none;">
-                        <h4>Weekend Hours</h4>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="satStart">Saturday Start</label>
-                                <input type="time" id="satStart" name="satStart" value="05:15">
-                            </div>
-                            <div class="form-group">
-                                <label for="satEnd">Saturday End</label>
-                                <input type="time" id="satEnd" name="satEnd" value="22:00">
+                        <h4>Weekend Service Options</h4>
+                        
+                        <div class="form-group">
+                            <label>Weekend Service Type</label>
+                            <div style="margin-left: 15px;">
+                                <div style="margin-bottom: 10px;">
+                                    <input type="radio" id="fullWeekendService" name="weekendServiceType" value="full" checked>
+                                    <label for="fullWeekendService" style="margin-left: 8px; font-weight: normal;">Full weekend service (custom hours for both days)</label>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <input type="radio" id="saturdayOnly" name="weekendServiceType" value="saturday-only">
+                                    <label for="saturdayOnly" style="margin-left: 8px; font-weight: normal;">Saturday service only (no Sunday service)</label>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <input type="radio" id="sundayOnly" name="weekendServiceType" value="sunday-only">
+                                    <label for="sundayOnly" style="margin-left: 8px; font-weight: normal;">Sunday service only (no Saturday service)</label>
+                                </div>
+                                <div style="margin-bottom: 15px;">
+                                    <input type="radio" id="noWeekendService" name="weekendServiceType" value="none">
+                                    <label for="noWeekendService" style="margin-left: 8px; font-weight: normal;">No weekend service</label>
+                                </div>
                             </div>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="sunStart">Sunday Start</label>
-                                <input type="time" id="sunStart" name="sunStart" value="05:15">
+
+                        <div id="weekendHoursSection">
+                            <h4>Weekend Hours</h4>
+                            <div class="form-row" id="saturdayHours">
+                                <div class="form-group">
+                                    <label for="satStart">Saturday Start</label>
+                                    <input type="time" id="satStart" name="satStart" value="05:15">
+                                </div>
+                                <div class="form-group">
+                                    <label for="satEnd">Saturday End</label>
+                                    <input type="time" id="satEnd" name="satEnd" value="22:00">
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="sunEnd">Sunday End</label>
-                                <input type="time" id="sunEnd" name="sunEnd" value="22:00">
+                            <div class="form-row" id="sundayHours">
+                                <div class="form-group">
+                                    <label for="sunStart">Sunday Start</label>
+                                    <input type="time" id="sunStart" name="sunStart" value="05:15">
+                                </div>
+                                <div class="form-group">
+                                    <label for="sunEnd">Sunday End</label>
+                                    <input type="time" id="sunEnd" name="sunEnd" value="22:00">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -469,6 +495,45 @@
             weekendSection.style.display = this.checked ? 'block' : 'none';
         });
 
+        // Handle weekend service type changes
+        function updateWeekendHoursVisibility() {
+            const weekendServiceType = document.querySelector('input[name="weekendServiceType"]:checked').value;
+            const saturdayHours = document.getElementById('saturdayHours');
+            const sundayHours = document.getElementById('sundayHours');
+            const weekendHoursSection = document.getElementById('weekendHoursSection');
+
+            switch(weekendServiceType) {
+                case 'full':
+                    weekendHoursSection.style.display = 'block';
+                    saturdayHours.style.display = 'flex';
+                    sundayHours.style.display = 'flex';
+                    break;
+                case 'saturday-only':
+                    weekendHoursSection.style.display = 'block';
+                    saturdayHours.style.display = 'flex';
+                    sundayHours.style.display = 'none';
+                    break;
+                case 'sunday-only':
+                    weekendHoursSection.style.display = 'block';
+                    saturdayHours.style.display = 'none';
+                    sundayHours.style.display = 'flex';
+                    break;
+                case 'none':
+                    weekendHoursSection.style.display = 'none';
+                    break;
+            }
+        }
+
+        // Add event listeners for weekend service type radio buttons
+        document.querySelectorAll('input[name="weekendServiceType"]').forEach(radio => {
+            radio.addEventListener('change', updateWeekendHoursVisibility);
+        });
+
+        // Initialize weekend hours visibility
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(updateWeekendHoursVisibility, 100); // Small delay to ensure DOM is ready
+        });
+
         let generatedConfig = null;
 
         document.getElementById('configForm').addEventListener('submit', function(e) {
@@ -490,6 +555,7 @@
                 serviceStart: formData.get('serviceStart'),
                 serviceEnd: formData.get('serviceEnd'),
                 hasWeekendOverride: formData.get('enableWeekendOverride') ? true : false,
+                weekendServiceType: formData.get('enableWeekendOverride') ? formData.get('weekendServiceType') : 'none',
                 satStart: formData.get('satStart'),
                 satEnd: formData.get('satEnd'),
                 sunStart: formData.get('sunStart'),
@@ -512,20 +578,57 @@
 
             let weekdayOverrides = {};
             if (formData.get('enableWeekendOverride')) {
-                weekdayOverrides = {
-                    "Sat": {
-                        service_windows: [{
-                            start: formData.get('satStart') + ':00',
-                            end: formData.get('satEnd') + ':00'
-                        }]
-                    },
-                    "Sun": {
-                        service_windows: [{
-                            start: formData.get('sunStart') + ':00',
-                            end: formData.get('sunEnd') + ':00'
-                        }]
-                    }
-                };
+                const weekendServiceType = formData.get('weekendServiceType');
+                
+                if (weekendServiceType === 'full') {
+                    weekdayOverrides = {
+                        "Sat": {
+                            service_windows: [{
+                                start: formData.get('satStart') + ':00',
+                                end: formData.get('satEnd') + ':00'
+                            }]
+                        },
+                        "Sun": {
+                            service_windows: [{
+                                start: formData.get('sunStart') + ':00',
+                                end: formData.get('sunEnd') + ':00'
+                            }]
+                        }
+                    };
+                } else if (weekendServiceType === 'saturday-only') {
+                    weekdayOverrides = {
+                        "Sat": {
+                            service_windows: [{
+                                start: formData.get('satStart') + ':00',
+                                end: formData.get('satEnd') + ':00'
+                            }]
+                        },
+                        "Sun": {
+                            service_windows: [] // No service on Sunday
+                        }
+                    };
+                } else if (weekendServiceType === 'sunday-only') {
+                    weekdayOverrides = {
+                        "Sat": {
+                            service_windows: [] // No service on Saturday
+                        },
+                        "Sun": {
+                            service_windows: [{
+                                start: formData.get('sunStart') + ':00',
+                                end: formData.get('sunEnd') + ':00'
+                            }]
+                        }
+                    };
+                } else if (weekendServiceType === 'none') {
+                    weekdayOverrides = {
+                        "Sat": {
+                            service_windows: [] // No service on Saturday
+                        },
+                        "Sun": {
+                            service_windows: [] // No service on Sunday
+                        }
+                    };
+                }
             }
 
             // Generate the complete configuration
