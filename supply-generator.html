@@ -248,14 +248,14 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Supply Vector Generator</h1>
+            <h1>Supply Vector Generator</h1>
             <p>Generate demand-based supply vectors for transit shift planning</p>
         </div>
 
         <div class="nav-container">
             <div class="nav-links">
-                <a href="index.html" class="nav-link">🚌 Config Generator</a>
-                <a href="supply-generator.html" class="nav-link active">📊 Supply Generator</a>
+                <a href="index.html" class="nav-link">Config Generator</a>
+                <a href="supply-generator.html" class="nav-link active">Supply Generator</a>
             </div>
         </div>
 
@@ -377,7 +377,12 @@
             const stored = localStorage.getItem('transitConfigData');
             if (stored) {
                 configData = JSON.parse(stored);
+                console.log('Loaded config data:', configData);
                 updateConfigInfo();
+                // Update charts after loading config data
+                if (weekdayChart) {
+                    updateCharts();
+                }
                 return true;
             }
             return false;
@@ -406,10 +411,15 @@
 
             // Show/hide weekend charts based on weekend override
             const weekendContainer = document.getElementById('weekendChartsContainer');
+            console.log('Config data:', configData);
+            console.log('Weekend override:', configData.hasWeekendOverride);
+            
             if (configData.hasWeekendOverride) {
                 weekendContainer.style.display = 'block';
+                console.log('Showing weekend charts');
             } else {
                 weekendContainer.style.display = 'none';
+                console.log('Hiding weekend charts');
             }
         }
 
