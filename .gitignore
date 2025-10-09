@@ -1,0 +1,7 @@
+# Sample files - keep local only
+sample*.json
+sample*.txt
+sample*supply.json
+
+# Compare files - keep local only  
+compare/
