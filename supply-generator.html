@@ -95,7 +95,7 @@
         }
 
         .section h3 {
-            color: #2c3e50;
+            color: #2c3e51;
             margin-bottom: 20px;
             font-size: 1.3rem;
             display: flex;
@@ -368,89 +368,90 @@
         let currentSaturdaySupplyData = [];
         let currentSundaySupplyData = [];
 
-        // Standard supply shapes (hourly values for 24 hours)
+        // Standard supply shapes to be displayed
+        // These are binned hourly and span 24 hours
         const standardShapes = {
             microtransit: {
                 weekday: [
-                    // 00:00-05:00: 1.0 ratio → 2.86 hours (scaled by 10/3.5)
+                    // 00:00-05:00:
                     2.86, 2.86, 2.86, 2.86, 2.86,
-                    // 05:00-07:00: 1.5 ratio → 4.29 hours
+                    // 05:00-07:00:
                     4.29, 4.29,
-                    // 07:00-11:00: 3.0 ratio → 8.57 hours
+                    // 07:00-11:00:
                     8.57, 8.57, 8.57, 8.57,
-                    // 11:00-13:00: 2.5 ratio → 7.14 hours
+                    // 11:00-13:00:
                     7.14, 7.14,
-                    // 13:00-16:00: 3.5 ratio → 10.0 hours (peak)
+                    // 13:00-16:00:
                     10.0, 10.0, 10.0,
-                    // 16:00-18:00: 3.0 ratio → 8.57 hours
+                    // 16:00-18:00:
                     8.57, 8.57,
-                    // 18:00-20:00: 2.0 ratio → 5.71 hours
+                    // 18:00-20:00:
                     5.71, 5.71,
-                    // 20:00-24:00: 1.0 ratio → 2.86 hours
+                    // 20:00-24:00:
                     2.86, 2.86, 2.86, 2.86
                 ],
                 weekend: [
-                    // 00:00-07:00: 1.0 ratio → 1.71 hours (scaled by 6/3.5)
+                    // 00:00-07:00:
                     1.71, 1.71, 1.71, 1.71, 1.71, 1.71, 1.71,
-                    // 07:00-09:00: 1.5 ratio → 2.57 hours
+                    // 07:00-09:00:
                     2.57, 2.57,
-                    // 09:00-10:00: 2.5 ratio → 4.29 hours
+                    // 09:00-10:00:
                     4.29,
-                    // 10:00-11:00: 3.0 ratio → 5.14 hours
+                    // 10:00-11:00:
                     5.14,
-                    // 11:00-16:00: 3.5 ratio → 6.0 hours (peak)
+                    // 11:00-16:00:
                     6.0, 6.0, 6.0, 6.0, 6.0,
-                    // 16:00-17:00: 3.0 ratio → 5.14 hours
+                    // 16:00-17:00:
                     5.14,
-                    // 17:00-20:00: 2.5 ratio → 4.29 hours
+                    // 17:00-20:00:
                     4.29, 4.29, 4.29,
-                    // 20:00-22:00: 1.5 ratio → 2.57 hours
+                    // 20:00-22:00:
                     2.57, 2.57,
-                    // 22:00-24:00: 1.0 ratio → 1.71 hours
+                    // 22:00-24:00:
                     1.71, 1.71
                 ]
             },
             paratransit: {
                 weekday: [
-                    // 00:00-04:00: 1.0 ratio → 2.86 hours (scaled by 10/3.5)
+                    // 00:00-04:00:
                     2.86, 2.86, 2.86, 2.86,
-                    // 04:00-06:00: 2.5 ratio → 7.14 hours  
+                    // 04:00-06:00:
                     7.14, 7.14,
-                    // 06:00-10:00: 3.5 ratio → 10.0 hours (peak)
-                    10.0, 10.0, 10.0, 10.0,
-                    // 10:00-13:00: 3.0 ratio → 8.57 hours
+                    // 06:00-10:00:
+                    9.5, 9.5, 9.5, 9.5,
+                    // 10:00-13:00:
                     8.57, 8.57, 8.57,
-                    // 13:00-16:00: 3.5 ratio → 10.0 hours (peak)
+                    // 13:00-16:00:
                     10.0, 10.0, 10.0,
-                    // 16:00-17:00: 2.5 ratio → 7.14 hours
+                    // 16:00-17:00:
                     7.14,
-                    // 17:00-20:00: 1.5 ratio → 4.29 hours
+                    // 17:00-20:00:
                     4.29, 4.29, 4.29,
-                    // 20:00-24:00: 1.0 ratio → 2.86 hours
+                    // 20:00-24:00:
                     2.86, 2.86, 2.86, 2.86
                 ],
                 weekend: [
-                    // 00:00-05:00: 1.0 ratio → 1.71 hours (scaled by 6/3.5)
+                    // 00:00-05:00:
                     1.71, 1.71, 1.71, 1.71, 1.71,
-                    // 05:00-07:00: 2.5 ratio → 4.29 hours
+                    // 05:00-07:00:
                     4.29, 4.29,
-                    // 07:00-10:00: 3.0 ratio → 5.14 hours
+                    // 07:00-10:00:
                     5.14, 5.14, 5.14,
-                    // 10:00-13:00: 2.5 ratio → 4.29 hours
+                    // 10:00-13:00:
                     4.29, 4.29, 4.29,
-                    // 13:00-17:00: 3.5 ratio → 6.0 hours (peak)
+                    // 13:00-17:00:
                     6.0, 6.0, 6.0, 6.0,
-                    // 17:00-19:00: 2.5 ratio → 4.29 hours
+                    // 17:00-19:00:
                     4.29, 4.29,
-                    // 19:00-20:00: 1.0 ratio → 1.71 hours (assumed, not specified)
+                    // 19:00-20:00:
                     1.71,
-                    // 20:00-24:00: 1.0 ratio → 1.71 hours
+                    // 20:00-24:00:
                     1.71, 1.71, 1.71, 1.71
                 ]
             }
         };
 
-        // Load configuration data from localStorage
+        // Load rollover config data from localStorage
         function loadConfigData() {
             const stored = localStorage.getItem('transitConfigData');
             if (stored) {
@@ -482,10 +483,10 @@
             
             let serviceHoursDisplay = '';
             
-            // Always show weekday hours
+            // Show weekday hours
             serviceHoursDisplay = `<strong>Weekday Hours:</strong> ${configData.serviceStart} - ${configData.serviceEnd}<br>`;
             
-            // Always show weekend service details (since weekend service is now always configured)
+            // Show weekend service details
             switch(configData.weekendServiceType) {
                 case 'full':
                     serviceHoursDisplay += `<strong>Saturday Hours:</strong> ${configData.satStart} - ${configData.satEnd}<br>`;
@@ -518,7 +519,7 @@
             console.log('Config data loaded:', configData);
             console.log('Weekend service type:', configData.weekendServiceType);
             
-            // Always show weekend charts unless weekendServiceType is 'none'
+            // Always show weekend charts unless weekendServiceType is none
             const shouldShowWeekendCharts = configData.weekendServiceType && 
                 configData.weekendServiceType !== 'none';
                 
@@ -533,7 +534,7 @@
             }
         }
 
-        // Calculate total supply hours for the week
+        // Calculate total supply hours for the week for NTE comparison
         function calculateTotalSupplyHours() {
             let totalHours = 0;
             
@@ -543,7 +544,7 @@
                 totalHours += weekdayTotal * 5; // 5 weekdays
             }
             
-            // Add weekend hours if applicable
+            // Add weekend hours
             if (configData && configData.weekendServiceType !== 'none') {
                 if (configData.weekendServiceType === 'full' || configData.weekendServiceType === 'saturday-only') {
                     if (currentSaturdaySupplyData.length > 0) {
@@ -600,9 +601,9 @@
             if (isWeekend && configData.hasWeekendOverride) {
                 const weekendServiceType = configData.weekendServiceType || 'full';
                 
-                // Check if this specific day has no service
+                // Check if this day has service
                 if (weekendServiceType === 'none') {
-                    return false; // No weekend service at all
+                    return false; // No Sunday or saturday service
                 } else if (weekendServiceType === 'saturday-only' && dayOfWeek === 0) {
                     return false; // No Sunday service
                 } else if (weekendServiceType === 'sunday-only' && dayOfWeek === 6) {
@@ -622,7 +623,7 @@
                     serviceStart = timeToMinutes(configData.sunStart || configData.serviceStart);
                     serviceEnd = timeToMinutes(configData.sunEnd || configData.serviceEnd);
                 } else {
-                    return false; // This day has no service
+                    return false; // no service
                 }
             } else {
                 // Weekday service
@@ -644,13 +645,13 @@
             if (isWeekend && configData.hasWeekendOverride) {
                 const weekendServiceType = configData.weekendServiceType || 'full';
                 
-                // Check if this specific day has no service
+                // Check if this specific day has service
                 if (weekendServiceType === 'none') {
-                    return false; // No weekend service at all
+                    return false;
                 } else if (weekendServiceType === 'saturday-only' && dayOfWeek === 0) {
-                    return false; // No Sunday service
+                    return false;
                 } else if (weekendServiceType === 'sunday-only' && dayOfWeek === 6) {
-                    return false; // No Saturday service
+                    return false; 
                 }
             }
             
@@ -666,7 +667,7 @@
                     serviceStart = timeToMinutes(configData.sunStart || configData.serviceStart);
                     serviceEnd = timeToMinutes(configData.sunEnd || configData.serviceEnd);
                 } else {
-                    return false; // This day has no service
+                    return false;
                 }
             } else {
                 // Weekday service
@@ -674,12 +675,13 @@
                 serviceEnd = timeToMinutes(configData.serviceEnd);
             }
             
-            // Calculate the exact time for this 15-minute bin
+            // Calculate the exact time for this 15 min bin
             const binTimeMinutes = hourOfDay * 60 + (binIndex * 15);
             return binTimeMinutes >= serviceStart && binTimeMinutes < serviceEnd;
         }
 
         // Generate constrained hourly pattern (applies service hour constraints)
+        // "Truncating" the default shape based on service hours
         function generateConstrainedHourlyPattern(serviceType, dayOfWeek, configData) {
             const basePattern = standardShapes[serviceType][dayOfWeek === 0 || dayOfWeek === 6 ? 'weekend' : 'weekday'];
             const constrainedPattern = [];
@@ -776,7 +778,7 @@
                 );
             }
 
-            // Weekend charts (only if weekend overrides exist and service is available)
+            // Weekend charts (if there's service)
             if (configData && configData.hasWeekendOverride && configData.weekendServiceType && configData.weekendServiceType !== 'none') {
                 
                 // Show Saturday chart container if Saturday service is enabled
@@ -886,7 +888,7 @@
             const serviceType = document.getElementById('serviceType').value;
             const scalingFactor = parseFloat(document.getElementById('scalingFactor').value) || 1.0;
             
-            // Use the exact start date provided by user (no forcing to Monday)
+            // Use the exact start date provided by user
             const startDate = new Date(`${startDateInput}T00:00:00`);
             const endDate = new Date(startDate);
             endDate.setDate(endDate.getDate() + 7); // Exactly 7 days later
@@ -905,7 +907,7 @@
             for (let day = 0; day < 7; day++) {
                 const currentDate = new Date(startDate);
                 currentDate.setDate(currentDate.getDate() + day);
-                const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+                const dayOfWeek = currentDate.getDay(); // 0 = Sunday
                 
                 let hourlyPattern;
                 
@@ -941,33 +943,32 @@
                         generateConstrainedHourlyPattern(serviceType, dayOfWeek, configData).map(val => val * scalingFactor);
                 }
                 
-                // Convert each hour to 4 fifteen-minute bins with granular service hour checking
+                // convert hours --> 15 min bins
                 for (let hour = 0; hour < 24; hour++) {
-                    // Always use base pattern for supply vector generation to ensure proper granular checking
                     const basePattern = standardShapes[serviceType][dayOfWeek === 0 || dayOfWeek === 6 ? 'weekend' : 'weekday'];
                     let baseHourlyValue = basePattern[hour] * scalingFactor;
                     
                     // If user has manually edited this day's pattern, use their values instead
                     if (dayOfWeek >= 1 && dayOfWeek <= 5 && currentWeekdaySupplyData.length > 0) {
-                        // Weekday - use edited weekday data
+                        // Weekday - use edited data
                         baseHourlyValue = currentWeekdaySupplyData[hour];
                     } else if (dayOfWeek === 6 && currentSaturdaySupplyData.length > 0) {
-                        // Saturday - use edited Saturday data  
+                        // Saturday - use edited data
                         baseHourlyValue = currentSaturdaySupplyData[hour];
                     } else if (dayOfWeek === 0 && currentSundaySupplyData.length > 0) {
-                        // Sunday - use edited Sunday data
+                        // Sunday - use edited data
                         baseHourlyValue = currentSundaySupplyData[hour];
                     }
                     
                     const baseBinValue = baseHourlyValue / 4; // Base value for 15-minute bins
                     
-                    // Check each of the 4 fifteen-minute bins for this hour
+                    // Check each of the 4 bins for this hour
                     for (let binIndex = 0; binIndex < 4; binIndex++) {
                         let finalBinValue;
                         if (isBinWithinServiceHours(dayOfWeek, hour, binIndex, configData)) {
-                            finalBinValue = Math.round(baseBinValue * 10) / 10; // Round to nearest tenth
+                            finalBinValue = Math.round(baseBinValue * 10) / 10; // Rounding
                         } else {
-                            finalBinValue = 0; // Zero if outside service hours
+                            finalBinValue = 0; // we zero out bins outside of service hours
                         }
                         supply15MinBins.push(finalBinValue);
                     }
@@ -975,6 +976,7 @@
             }
 
             // Verify we have exactly 672 bins
+            // TODO: to make this more robust we should check for service hours * bins per hour
             if (supply15MinBins.length !== 672) {
                 console.error(`Expected 672 bins, got ${supply15MinBins.length}`);
             }
@@ -993,7 +995,7 @@
                 }
             }];
 
-            // Display the generated supply vector
+            // display generated supply vector
             document.getElementById('supplyOutput').textContent = JSON.stringify(generatedSupplyVector, null, 2);
             document.getElementById('outputSection').style.display = 'block';
             document.getElementById('copySupplyBtn').style.display = 'inline-block';
