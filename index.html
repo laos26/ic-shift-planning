@@ -695,6 +695,8 @@
                     "constraints": {
                         "min_driving_net": Math.round(parseInt(formData.get('minShiftLength')) / 15),
                         "max_driving_net": Math.round(parseInt(formData.get('maxShiftLength')) / 15),
+                        "min_continuous_driving_time": Math.round(parseInt(formData.get('minShiftLength')) / 15),
+                        "max_continuous_driving_time": Math.round(parseInt(formData.get('maxShiftLength')) / 15),
                         "absolute_minimum_active_vehicles": parseInt(formData.get('minActiveVehicles')),
                         "long_short_boundary": Math.round(parseInt(formData.get('longShortBoundary')) / 15),
                         "min_num_short_shifts": parseInt(formData.get('minShortShifts'))
